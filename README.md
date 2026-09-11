@@ -1,10 +1,10 @@
 Team project archive
 
-# 안넘어집 (Flask)
+#### 안넘어집 (Flask)
 
 Streamlit 화면을 **Flask + 순수 HTML/CSS/JS**로 마이그레이션한 버전. 백엔드 로직(`src/`, `integration/`)은 그대로 유지
 
-## 실행
+#### 실행
 
 ```bash
 python -m venv .venv
@@ -15,14 +15,14 @@ python app.py
 
 ```
 
-## 구조
+#### 구조
 
 * `app.py`: Flask 라우팅 및 백엔드 연동
 * `templates/`: Jinja2 UI 템플릿
 * `static/`: 스타일 및 가구 배치 에디터(Vanilla JS)
 * `integration/`, `src/`: 기존 모델·RAG·GPT 파이프라인
 
-## 주요 변경점
+#### 주요 변경점
 
 * 세션: 서명된 쿠키(`sid`) 기반 서버 메모리 관리
 * UI: Plotly → 순수 SVG 게이지, iframe 에디터 → 단일 페이지 JS 통합

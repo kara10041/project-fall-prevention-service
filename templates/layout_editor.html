@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+{% block title %}안넘어집 | {{ room_info.label }} 배치 · 안전 점검{% endblock %}
+{% block content %}
+<div class="eyebrow">{{ room_info.label }} 상세 점검</div>
+<div class="layout-title-row">
+  <div>
+    <h2 class="medi-title">{{ room_info.icon }} {{ room_info.label }} 가구 배치 · 안전 점검</h2>
+    <p class="medi-subtitle">{{ room_info.desc }}</p>
+  </div>
+  <button id="openLayoutGuide" class="layout-guide-open" type="button">? 배치 방법 보기</button>
+</div>
+
+<div class="modal-overlay layout-guide-overlay" id="layoutGuideModal" aria-hidden="true">
+  <div class="layout-guide-modal" role="dialog" aria-modal="true" aria-labelledby="layoutGuideTitle">
+    <button type="button" class="modal-close" id="layoutGuideClose" aria-label="안내 닫기">✕</button>
+    <div class="layout-guide-kicker">처음이라면 이렇게 해보세요</div>
+    <h3 id="layoutGuideTitle">내 방 배치, 4단계면 충분해요</h3>
+    <p class="layout-guide-intro">실제 방과 비슷하게 배치할수록 더 알맞은 공간 개선안을 받을 수 있어요.</p>
+
+    <div class="layout-guide-steps">
+      <div class="layout-guide-step">
+        <span class="layout-guide-num">1</span>
+        <div>
+          <b>방 크기를 맞춰주세요</b>
+          <p>왼쪽에서 방의 가로·세로 크기를 실제 크기와 비슷하게 조절해 주세요.</p>
+        </div>
+      </div>
+      <div class="layout-guide-step">
+        <span class="layout-guide-num">2</span>
+        <div>
+          <b>가구를 배치해주세요</b>
+          <p>제공되는 가구를 실제 방과 비슷하게 놓아주세요. 가구는 끌어서 이동하고 크기와 방향도 바꿀 수 있어요.</p>
+        </div>
+      </div>
+      <div class="layout-guide-step">
+        <span class="layout-guide-num">3</span>
+        <div>
+          <b>불편한 곳을 알려주세요</b>
+          <p>특정 위치의 문제는 ‘특정 지점 메모’에, 방 전체의 문제는 ‘방 전체 추가 메모’에 적어주세요.</p>
+          <span class="layout-guide-example">예: 침대 옆이 어두움 · 통로에 물건을 자주 둠</span>
+        </div>
+      </div>
+      <div class="layout-guide-step">
+        <span class="layout-guide-num">4</span>
+        <div>
+          <b>배치가 끝나면 안전성을 확인해주세요</b>
+          <p>‘현재 배치 안전성 점검하기’를 누르면 건강·생활 정보와 방 상태를 함께 살펴 개선안을 보여드려요.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout-guide-footer">
+      <label class="layout-guide-skip"><input type="checkbox" id="layoutGuideDontShow"> 다음부터 보지 않기</label>
+      <button type="button" class="layout-guide-start" id="layoutGuideStart">확인하고 배치 시작하기</button>
+    </div>
+  </div>
+</div>
+
+<details class="expander" open>
+  <summary>앞에서 확인한 {{ room_label }} 상태</summary>
+  <div class="expander-body">
+    {% if not questions %}
+      <p class="alert alert-info">현재 설문 결과에서는 이 공간에 추가로 확인할 항목이 없습니다.</p>
+    {% else %}
+      <p class="caption">앞 단계에서 선택한 내용 중 {{ room_label }}과 관련된 항목입니다. 여기서는 확인만 할 수 있습니다.</p>
+      <div class="checkbox-grid" id="hazardQuestions">
+        {% for q in questions %}
+        <label class="checkbox-item" title="표시 사유: {{ q.trigger_labels|join(', ') }}">
+          <input type="checkbox" data-hazard-code="{{ q.hazard_code }}" {{ 'checked' if saved_flags.get(q.hazard_code) }} disabled aria-disabled="true">
+          {{ q.label }}
+        </label>
+        {% endfor %}
+      </div>
+      <details class="expander">
+        <summary>이 문항들이 표시된 이유</summary>
+        <div class="expander-body">
+          <ul>
+          {% for q in questions %}
+            <li><b>{{ q.label }}</b> · {{ q.trigger_labels|join(', ') if q.trigger_labels else '건강·생활 설문' }}</li>
+          {% endfor %}
+          </ul>
+        </div>
+      </details>
+    {% endif %}
+  </div>
+</details>
+
+
+<div class="layout-app layout-app-three">
+  <aside class="palette palette-left">
+    <div class="palette-title">방 크기 설정</div>
+    <div class="room-size-field">
+      <label for="roomWidthSlider">방 가로 크기(cm)</label>
+      <div class="slider-wrap">
+        <output id="roomWidthValue" for="roomWidthSlider">{{ saved_room_width|int }}</output>
+        <input type="range" id="roomWidthSlider" min="200" max="1200" step="10" value="{{ saved_room_width|int }}">
+      </div>
+    </div>
+    <div class="room-size-field">
+      <label for="roomHeightSlider">방 세로 크기(cm)</label>
+      <div class="slider-wrap">
+        <output id="roomHeightValue" for="roomHeightSlider">{{ saved_room_height|int }}</output>
+        <input type="range" id="roomHeightSlider" min="200" max="1200" step="10" value="{{ saved_room_height|int }}">
+      </div>
+    </div>
+    <p class="caption" id="roomSizeCaption">현재 방 크기: 가로 {{ saved_room_width|int }}cm × 세로 {{ saved_room_height|int }}cm</p>
+
+    <div>
+    <div class="palette-title" style="margin-top:18px;">가구 추가</div>
+    <label for="furnitureName">가구 이름</label>
+    <input type="text" id="furnitureName" placeholder="예: 책상, TV장, 보행기" />
+    <label for="furnitureShape">가구 모양</label>
+    <select id="furnitureShape" class="palette-select">
+      <option value="rect">직사각형</option>
+      <option value="circle">원형</option>
+    </select>
+    <button id="addFurniture" class="primary-small" type="button">가구 추가</button>
+
+    <div class="preset-title" style="margin-top:16px;">{{ room_label }} 빠른 추가</div>
+    <div class="preset-grid">
+      {% if room == 'kitchen' %}
+        <button class="preset" data-name="싱크대" data-shape="rect" type="button">싱크대</button>
+        <button class="preset" data-name="조리대" data-shape="rect" type="button">조리대</button>
+        <button class="preset" data-name="냉장고" data-shape="rect" type="button">냉장고</button>
+        <button class="preset" data-name="식탁" data-shape="rect" type="button">식탁</button>
+        <button class="preset" data-name="의자" data-shape="rect" type="button">의자</button>
+        <button class="preset" data-name="수납장" data-shape="rect" type="button">수납장</button>
+      {% elif room == 'bathroom' %}
+        <button class="preset" data-name="변기" data-shape="rect" type="button">변기</button>
+        <button class="preset" data-name="세면대" data-shape="rect" type="button">세면대</button>
+        <button class="preset" data-name="샤워공간" data-shape="rect" type="button">샤워공간</button>
+        <button class="preset" data-name="욕조" data-shape="rect" type="button">욕조</button>
+        <button class="preset" data-name="수납장" data-shape="rect" type="button">수납장</button>
+        <button class="preset" data-name="미끄럼방지매트" data-shape="rect" type="button">매트</button>
+      {% elif room == 'bedroom' %}
+        <button class="preset" data-name="침대" data-shape="rect" type="button">침대</button>
+        <button class="preset" data-name="협탁" data-shape="rect" type="button">협탁</button>
+        <button class="preset" data-name="옷장" data-shape="rect" type="button">옷장</button>
+        <button class="preset" data-name="서랍장" data-shape="rect" type="button">서랍장</button>
+        <button class="preset" data-name="의자" data-shape="rect" type="button">의자</button>
+        <button class="preset" data-name="러그" data-shape="rect" type="button">러그</button>
+      {% else %}
+        <button class="preset" data-name="소파" data-shape="rect" type="button">소파</button>
+        <button class="preset" data-name="테이블" data-shape="rect" type="button">테이블</button>
+        <button class="preset" data-name="TV장" data-shape="rect" type="button">TV장</button>
+        <button class="preset" data-name="의자" data-shape="rect" type="button">의자</button>
+        <button class="preset" data-name="러그" data-shape="rect" type="button">러그</button>
+        <button class="preset" data-name="수납장" data-shape="rect" type="button">수납장</button>
+      {% endif %}
+      <button class="preset" data-name="원형 테이블" data-shape="circle" type="button">원형 가구</button>
+      <button class="preset" data-name="문" data-shape="door" type="button">문 (1/4원)</button>
+    </div>
+    </div>
+
+    
+  </aside>
+
+  <section class="workspace">
+    <div class="workspace-header">
+      <div>
+        <strong id="workspaceTitle">내 방 가구 배치</strong>
+        <p id="workspaceHelp">가구를 끌어 이동하고, 오른쪽 아래 손잡이로 크기 조절, 위쪽의 큰 ↻ 손잡이로 회전하세요.</p>
+      </div>
+      <span id="itemCount" class="count">가구 0개</span>
+    </div>
+
+    <div id="roomStage" class="room-stage room-stage-measured">
+      <div class="room-dimension room-dimension-width" id="roomWidthDimension"><span>{{ saved_room_width|int }} cm</span></div>
+      <div class="room-dimension room-dimension-height" id="roomHeightDimension"><span>{{ saved_room_height|int }} cm</span></div>
+      <div id="room" class="room room-with-grid">
+        <div id="emptyHint" class="empty-hint" style="display:flex; align-items:center; justify-content:center; height:100%; color:#8FA399; text-align:center; font-size:13px;">
+          왼쪽에서 가구를 추가해 배치를 시작해 보세요.
+        </div>
+      </div>
+    </div>
+
+    <div id="message" class="message"></div>
+    <div class="editor-shortcuts">
+      <span>이동: 가구 드래그</span><span>크기: 오른쪽 아래 ■</span><span>회전: 위쪽 ↻</span><span>되돌리기: Ctrl+Z</span>
+    </div>
+    <div id="analysisActionWrap" class="analysis-action-wrap">
+      <button id="analyzeLayout" class="analyze-button" type="button">현재 배치 안전성 점검하기</button>
+      <p id="analysisActionHint" class="caption analysis-action-hint">직접 만든 현재 배치를 건강·생활 정보와 공간 상태를 함께 살펴 점검합니다.</p>
+    </div>
+  </section>
+
+  <aside class="palette palette-right">
+    <div class="palette-title" id="editToolsTitle">편집 도구</div>
+    <div class="edit-action-grid">
+      <button id="undoLayout" class="reset-button" type="button">↶ 되돌리기</button>
+      <button id="deleteSelected" class="delete-button" type="button">선택 가구 삭제</button>
+      <button id="resetLayout" class="reset-button edit-action-wide" type="button">전체 초기화</button>
+    </div>
+
+    <div>
+    <div class="preset-title" style="margin-top:18px;">특정 지점 메모</div>
+    <p class="caption" style="margin:0 0 8px;">설명을 적고 버튼을 누른 뒤 방 안의 위치를 클릭하세요. 번호 핀으로 저장됩니다.</p>
+    <textarea id="pointNoteText" class="palette-textarea palette-textarea-small" placeholder="예: 이 위치 바닥이 자주 미끄러움 / 문턱이 높음"></textarea>
+    <button id="startPointNote" class="secondary-small" type="button">설명 입력 후 지점 찍기</button>
+    <div id="pointNoteList" class="point-note-list"></div>
+
+    <div class="preset-title" style="margin-top:18px;">방 전체 추가 메모</div>
+    <textarea id="roomNote" class="palette-textarea" placeholder="예: 밤에 전체적으로 어두움 / 통로에 물건을 자주 둠">{{ saved_room_note or '' }}</textarea>
+
+    <div class="selected-info" style="margin-top:16px;">
+      <b>조작 팁</b>
+      <p>회전 손잡이는 클릭하기 쉽도록 크게 만들었습니다. 원형 가구는 가로 또는 세로 어느 방향으로 끌어도 크기가 바뀝니다.</p>
+    </div>
+    </div>
+
+    
+  </aside>
+</div>
+
+<div class="analysis-transition-overlay" id="analysisTransitionOverlay" aria-hidden="true">
+  <div class="analysis-transition-card">
+    <div class="analysis-loader-orbit" aria-hidden="true"><span></span><span></span></div>
+    <div class="analysis-transition-kicker">공간 분석 시작</div>
+    <h3>배치한 방을 살펴볼게요</h3>
+    <p>방 크기와 가구 위치, 앞에서 확인한 건강·생활 정보와 공간 상태를 함께 살펴봅니다.</p>
+    <div class="analysis-progress-track"><span></span></div>
+    <div class="analysis-progress-steps"><b>1 · 배치 확인</b><span>2 · 위험 지점 분석</span><span>3 · 개선 방향 정리</span></div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/layout_editor.js') }}"></script>
+<script>
+const savedLayout = {{ saved_layout|tojson }};
+const savedRoomWidth = {{ saved_room_width|tojson }};
+const savedRoomHeight = {{ saved_room_height|tojson }};
+const savedRoomNote = {{ saved_room_note|tojson }};
+const savedPointNotes = {{ saved_point_notes|tojson }};
+
+const roomWidthSlider = document.getElementById("roomWidthSlider");
+const roomHeightSlider = document.getElementById("roomHeightSlider");
+const roomWidthValue = document.getElementById("roomWidthValue");
+const roomHeightValue = document.getElementById("roomHeightValue");
+const roomSizeCaption = document.getElementById("roomSizeCaption");
+const roomWidthDimension = document.getElementById("roomWidthDimension");
+const roomHeightDimension = document.getElementById("roomHeightDimension");
+
+function positionSliderOutput(slider, output) {
+  const min = Number(slider.min), max = Number(slider.max), val = Number(slider.value);
+  const percent = max > min ? (val - min) / (max - min) : 0;
+  const thumbSize = 16;
+  const offset = thumbSize / 2 - percent * thumbSize;
+  output.textContent = val;
+  output.style.left = `calc(${percent * 100}% + ${offset}px)`;
+}
+
+function handleRoomSizeChange() {
+  const width = Number(roomWidthSlider.value);
+  const height = Number(roomHeightSlider.value);
+  window.RoomLayoutEditor.applyRoomSize(width, height);
+  positionSliderOutput(roomWidthSlider, roomWidthValue);
+  positionSliderOutput(roomHeightSlider, roomHeightValue);
+  roomSizeCaption.textContent = `현재 방 크기: 가로 ${width}cm × 세로 ${height}cm`;
+  if (roomWidthDimension) roomWidthDimension.querySelector("span").textContent = `${width} cm`;
+  if (roomHeightDimension) roomHeightDimension.querySelector("span").textContent = `${height} cm`;
+  window.RoomLayoutEditor.updateGrid?.();
+}
+
+roomWidthSlider.addEventListener("input", handleRoomSizeChange);
+roomHeightSlider.addEventListener("input", handleRoomSizeChange);
+
+window.addEventListener("DOMContentLoaded", () => {
+  window.RoomLayoutEditor.applyRoomSize(savedRoomWidth, savedRoomHeight);
+  positionSliderOutput(roomWidthSlider, roomWidthValue);
+  positionSliderOutput(roomHeightSlider, roomHeightValue);
+  if (savedLayout && savedLayout.length) {
+    window.RoomLayoutEditor.restore(savedLayout);
+  }
+  if (savedPointNotes && savedPointNotes.length) {
+    window.RoomLayoutEditor.restorePointNotes(savedPointNotes);
+  }
+  window.RoomLayoutEditor.clearHistory();
+  const roomNote = document.getElementById("roomNote");
+  if (roomNote) roomNote.value = savedRoomNote || "";
+});
+
+// 처음 배치하는 사용자를 위한 4단계 안내
+const layoutGuideModal = document.getElementById("layoutGuideModal");
+const layoutGuideOpen = document.getElementById("openLayoutGuide");
+const layoutGuideClose = document.getElementById("layoutGuideClose");
+const layoutGuideStart = document.getElementById("layoutGuideStart");
+const layoutGuideDontShow = document.getElementById("layoutGuideDontShow");
+const LAYOUT_GUIDE_STORAGE_KEY = "anneomeojib_layout_guide_hidden_v1";
+
+function openLayoutGuide() {
+  if (!layoutGuideModal) return;
+  layoutGuideModal.classList.add("open");
+  layoutGuideModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+}
+
+function closeLayoutGuide(savePreference = false) {
+  if (!layoutGuideModal) return;
+  if (savePreference && layoutGuideDontShow && layoutGuideDontShow.checked) {
+    try { localStorage.setItem(LAYOUT_GUIDE_STORAGE_KEY, "1"); } catch (_) {}
+  }
+  layoutGuideModal.classList.remove("open");
+  layoutGuideModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+}
+
+if (layoutGuideOpen) layoutGuideOpen.addEventListener("click", openLayoutGuide);
+if (layoutGuideClose) layoutGuideClose.addEventListener("click", () => closeLayoutGuide(false));
+if (layoutGuideStart) layoutGuideStart.addEventListener("click", () => closeLayoutGuide(true));
+if (layoutGuideModal) {
+  layoutGuideModal.addEventListener("click", (event) => {
+    if (event.target === layoutGuideModal) closeLayoutGuide(false);
+  });
+}
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && layoutGuideModal?.classList.contains("open")) closeLayoutGuide(false);
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+  let hidden = false;
+  try { hidden = localStorage.getItem(LAYOUT_GUIDE_STORAGE_KEY) === "1"; } catch (_) {}
+  if (!hidden) window.setTimeout(openLayoutGuide, 120);
+});
+
+function collectHazardFlags() {
+  const flags = {};
+  const context = [];
+  document.querySelectorAll("#hazardQuestions input[type=checkbox]").forEach((el) => {
+    const code = el.dataset.hazardCode;
+    flags[code] = el.checked;
+  });
+  {% for q in questions %}
+  context.push(Object.assign({}, {{ q|tojson }}, {
+    checked: document.querySelector('#hazardQuestions input[data-hazard-code="{{ q.hazard_code }}"]').checked
+  }));
+  {% endfor %}
+  return { flags, context };
+}
+
+const analyzeButton = document.getElementById("analyzeLayout");
+const message = document.getElementById("message");
+const transitionOverlay = document.getElementById("analysisTransitionOverlay");
+
+function showAnalysisTransition() {
+  transitionOverlay?.classList.add("open");
+  transitionOverlay?.setAttribute("aria-hidden", "false");
+  document.body.classList.add("analysis-busy");
+}
+
+function hideAnalysisTransition() {
+  transitionOverlay?.classList.remove("open");
+  transitionOverlay?.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("analysis-busy");
+}
+
+analyzeButton.addEventListener("click", async () => {
+  const layout = window.RoomLayoutEditor.collectLayout();
+  if (!layout.length) {
+    message.textContent = "가구를 한 개 이상 배치한 뒤 분석해 주세요.";
+    return;
+  }
+
+  const { flags, context } = collectHazardFlags();
+  const size = window.RoomLayoutEditor.getLogicalSize();
+  message.textContent = "";
+  analyzeButton.disabled = true;
+  showAnalysisTransition();
+
+  try {
+    const res = await fetch("/api/prepare_layout_analysis", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        layout,
+        room_width: size.width,
+        room_height: size.height,
+        hazard_flags: flags,
+        question_context: context,
+        room_note: (document.getElementById("roomNote")?.value || "").trim(),
+        point_notes: window.RoomLayoutEditor.collectPointNotes(),
+      }),
+    });
+    const contentType = res.headers.get("content-type") || "";
+    const data = contentType.includes("application/json") ? await res.json() : { error: await res.text() };
+    if (!res.ok) throw new Error(data.error || "배치 정보를 저장하지 못했습니다.");
+    window.location.href = data.redirect_url || "/layout_analysis";
+  } catch (err) {
+    hideAnalysisTransition();
+    analyzeButton.disabled = false;
+    message.textContent = err.message || "분석 화면으로 이동하지 못했습니다. 다시 시도해 주세요.";
+  }
+});
+</script>
+{% endblock %}

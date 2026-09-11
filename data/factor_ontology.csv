@@ -1,0 +1,53 @@
+﻿model_feature,factor_code,need_code,spatial_actionable,review_status,notes
+RES_MAR_유배우,LIVES_WITH_SPOUSE,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+"의사진단 만성질환 유무_골관절염(퇴행성관절염), 류머티즘 관절염",OSTEOARTHRITIS,LOWER_LIMB_SUPPORT,1,확정,공간 추천 계산에 사용
+동작수행 어려움_쉬지않고 10계단 오르기,STAIR_CLIMB_DIFFICULTY,STAIR_NEGOTIATION,1,확정,공간 추천 계산에 사용
+동작수행 어려움_운동장 한 바퀴(400m)정도 뛰기,RUNNING_DIFFICULTY,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+동작수행 어려움_운동장 한 바퀴(400m)정도 걷기,WALKING_DIFFICULTY,WALKING_SUPPORT,1,검토,공간 추천 계산에 사용
+동작수행 어려움_머리보다 높은 곳에 있는 것 손 뻗쳐 닿기,HIGH_REACH_DIFFICULTY,HIGH_REACH_AVOIDANCE,1,확정,공간 추천 계산에 사용
+동작수행 어려움_쌀 1말(8kg) 정도 물건 들어 올리거나 옮기기,LOAD_HANDLING_DIFFICULTY,LOAD_HANDLING_REDUCTION,1,검토,공간 추천 계산에 사용
+평소 운동 여부,REGULAR_EXERCISE,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+노인이 생활하는데 편리함 정도,PERCEIVED_HOME_CONVENIENCE,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+현재 살고있는 주택에 대한 만족도,HOUSING_SATISFACTION,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+지역사회 환경 만족도_지역사회 환경 전반,COMMUNITY_ENV_SATISFACTION,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+노인 조사 대상자 성별,SEX,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+노인 조사 대상자 교육연수,EDUCATION_YEARS,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+노인가구형태,HOUSEHOLD_TYPE,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+만족도_경제상태,ECONOMIC_SATISFACTION,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+현재 경제활동 여부,ECONOMIC_ACTIVITY,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+지난 1년 간 음주 빈도,ALCOHOL_FREQUENCY,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+일상생활의 불편함_청력,HEARING_DIFFICULTY,ALERT_SUPPORT,1,검토,공간 추천 계산에 사용
+"의사진단 만성질환 유무_뇌졸중(중풍, 뇌경색)",STROKE,WALKING_SUPPORT,1,검토,공간 추천 계산에 사용
+"의사진단 만성질환 유무_협심증, 심근경색증",ISCHEMIC_HEART_DISEASE,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+의사진단 만성질환 유무_골다공증,OSTEOPOROSIS,FALL_IMPACT_REDUCTION,1,검토,공간 추천 계산에 사용
+"의사진단 만성질환 유무_만성기관지염, 폐기종",CHRONIC_RESPIRATORY_DISEASE,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+의사진단 만성질환 유무_불면증,INSOMNIA,NIGHTTIME_SAFETY,1,검토,공간 추천 계산에 사용
+의사진단 만성질환 유무_요실금,URINARY_INCONTINENCE,TOILET_ACCESS,1,확정,공간 추천 계산에 사용
+치료 여부_우울증,DEPRESSION_TREATMENT,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+치료 여부_불면증,INSOMNIA_TREATMENT,NIGHTTIME_SAFETY,1,검토,공간 추천 계산에 사용
+치료 여부_전립선 비대증,BPH_TREATMENT,TOILET_ACCESS,1,검토,공간 추천 계산에 사용
+RES_MAR_미혼,NEVER_MARRIED,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+RES_MAR_별거,SEPARATED,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+RES_MAR_사별,WIDOWED,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+RES_MAR_이혼,DIVORCED,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+Q1_아파트,APARTMENT,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+Q1_연립다세대,MULTIFAMILY_HOUSE,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+의사진단 만성질환 유무_파킨슨병,PARKINSON_DISEASE,WALKING_SUPPORT,1,검토,공간 추천 계산에 사용
+Q1_기타,DWELLING_OTHER,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+현재 3개월 이상 복용하고 있는 의사처방약(종류),PRESCRIPTION_MEDICATION_COUNT,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+"의사진단 만성질환 유무_요통, 좌골신경통",LOW_BACK_PAIN,LOW_REACH_AVOIDANCE,1,검토,공간 추천 계산에 사용
+의사진단 만성질환 유무_빈혈,ANEMIA,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+"의사진단 만성질환 유무_골절, 탈골 및 사고 후유증",FRACTURE_SEQUELAE,LOWER_LIMB_SUPPORT,1,검토,공간 추천 계산에 사용
+근력상태_의자나 침대에 앉았다가 일어나기 5회 반복,SIT_TO_STAND_LIMITATION,SIT_TO_STAND_SUPPORT,1,확정,공간 추천 계산에 사용
+IADL,IADL_LIMITATION,ACCESSIBILITY_SUPPORT,1,검토,공간 추천 계산에 사용
+일상생활의 불편함_시력,VISION_DIFFICULTY,VISUAL_GUIDANCE,1,확정,공간 추천 계산에 사용
+의사진단 만성질환 총 수,CHRONIC_DISEASE_COUNT,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+ADL,ADL_LIMITATION,ACCESSIBILITY_SUPPORT,1,검토,공간 추천 계산에 사용
+Q1_단독주택,DETACHED_HOUSE,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+GDS,DEPRESSIVE_SYMPTOMS,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+인지기능_총점,COGNITIVE_FUNCTION,ORIENTATION_SUPPORT,1,검토,공간 추천 계산에 사용
+노인 조사 대상자 만연령,AGE,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+평소의 건강상태,SELF_RATED_HEALTH,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+동작수행 어려움_몸 구부리거나 쭈그려 앉거나 무릎 꿇기,BENDING_DIFFICULTY,LOW_REACH_AVOIDANCE,1,확정,공간 추천 계산에 사용
+Nutritional,NUTRITIONAL_STATUS,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요
+만족도_건강상태,HEALTH_SATISFACTION,NON_SPATIAL_CONTEXT,0,확인,설명용 변수 또는 추가 검토 필요

@@ -1,0 +1,15 @@
+{
+  "priority": {
+    "default_ontology_status": ["확정"],
+    "interaction_applied": false
+  },
+  "hazard_detection": {
+    "numeric_threshold_rules_enabled": false,
+    "policy": "explicit attributes and observations only"
+  },
+  "rag": {
+    "metadata_fields": ["eligible", "factor_1", "factor_aliases", "space_categories"],
+    "vector_text_field": "search_text",
+    "tie_break_fields": ["evidence_score", "sms"]
+  }
+}

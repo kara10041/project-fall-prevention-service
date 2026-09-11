@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}안넘어집 | 우리 집 위험요소 확인{% endblock %}
+{% block content %}
+<div class="priority-intro">
+  <span class="priority-kicker">우리 집 안전 점검</span>
+  <h2 class="medi-title">우리 집에 해당하는 위험요소를 확인해 주세요</h2>
+  <p class="medi-subtitle">건강·생활 설문과 실제 집 상태를 함께 살펴보고, 먼저 고치면 좋은 공간부터 안내합니다.</p>
+</div>
+
+<form id="space-hazard-form">
+  <div class="space-check-grid">
+    {% for room_key, room_info in rooms.items() %}
+      <section class="medi-card space-check-card" data-room="{{ room_key }}">
+        <div class="space-check-head">
+          <div class="room-icon-small">{{ room_info.icon }}</div>
+          <div>
+            <h3>{{ room_info.label }}</h3>
+            <p>해당하는 항목만 선택해 주세요.</p>
+          </div>
+        </div>
+
+        {% set questions = questions_by_room.get(room_key, []) %}
+        {% if questions %}
+          <div class="hazard-check-list">
+            {% for q in questions %}
+              <label class="hazard-check-item">
+                <input
+                  type="checkbox"
+                  name="{{ room_key }}__{{ q.hazard_code }}"
+                  data-room="{{ room_key }}"
+                  data-hazard="{{ q.hazard_code }}"
+                  data-label="{{ q.label }}"
+                  data-priority="{{ q.priority }}"
+                  {% if saved_by_room.get(room_key, {}).get(q.hazard_code) %}checked{% endif %}
+                >
+                <span class="hazard-checkbox-ui"></span>
+                <span>{{ q.label }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-check-message">현재 설문 결과를 바탕으로 추가로 확인할 항목이 없습니다.</div>
+        {% endif %}
+      </section>
+    {% endfor %}
+  </div>
+
+  <div class="space-check-actions">
+    <a href="{{ url_for('result_page') }}" class="btn btn-secondary">← 예측 결과로 돌아가기</a>
+    <button type="submit" class="btn" id="analyze-priority-btn">확인한 내용으로 다음 단계 →</button>
+  </div>
+  <p class="priority-note">※ 해당되는 항목만 선택해 주세요. 선택하지 않았다고 해서 문제가 없다고 단정하지는 않습니다.</p>
+</form>
+
+<script>
+document.getElementById("space-hazard-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const btn = document.getElementById("analyze-priority-btn");
+  btn.disabled = true;
+  btn.textContent = "확인 중...";
+
+  const flagsByRoom = {};
+  const contextByRoom = {};
+  document.querySelectorAll(".space-check-card").forEach((card) => {
+    const room = card.dataset.room;
+    flagsByRoom[room] = {};
+    contextByRoom[room] = [];
+    card.querySelectorAll("input[data-hazard]").forEach((input) => {
+      flagsByRoom[room][input.dataset.hazard] = input.checked;
+      contextByRoom[room].push({
+        hazard_code: input.dataset.hazard,
+        label: input.dataset.label,
+        priority: Number(input.dataset.priority || 999),
+        checked: input.checked,
+        confirmation_status: input.checked ? "CONFIRMED_BY_USER_CHECKLIST" : "UNCONFIRMED",
+      });
+    });
+  });
+
+  try {
+    const res = await fetch("/api/space_hazards", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flags_by_room: flagsByRoom, context_by_room: contextByRoom }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "확인한 내용을 정리하지 못했습니다.");
+    window.location.href = "/floorplan";
+  } catch (error) {
+    alert(error.message);
+    btn.disabled = false;
+    btn.textContent = "확인한 내용으로 다음 단계 →";
+  }
+});
+</script>
+{% endblock %}

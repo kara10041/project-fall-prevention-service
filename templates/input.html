@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% block title %}안넘어집 | 낙상 위험 자가 검사{% endblock %}
+{% block content %}
+<div class="eyebrow">2. 사용자 정보 입력</div>
+<h2 class="medi-title">낙상 위험 자가 검사</h2>
+<p class="medi-subtitle">건강·생활 정보를 단계별로 입력해 주세요. 입력한 내용은 낙상 위험을 살펴보는 데 사용됩니다.</p>
+
+<div class="service-notice">
+  <div class="service-notice-icon">i</div>
+  <div>
+    <div class="service-notice-title">서비스 이용 전 확인해 주세요</div>
+    <ul class="service-notice-list">
+      <li>이 서비스는 의료 진단을 대신하지 않습니다.</li>
+      <li>분석 결과는 낙상 예방을 위한 참고 정보입니다.</li>
+      <li>위험이 높거나 최근 낙상을 경험했다면 의료진과 상담하세요.</li>
+    </ul>
+    <div class="service-notice-privacy">입력한 건강 정보와 공간 데이터는 분석에만 사용됩니다.</div>
+  </div>
+</div>
+
+<div class="survey-guide">
+  지난 1년 낙상 경험은 결과를 확인하는 기준으로 사용되기 때문에 설문에서는 묻지 않습니다.
+  아래 건강·생활 정보를 바탕으로 낙상 위험을 계산합니다.
+</div>
+<p class="caption">초기 선택값은 질환·기능 제한이 없는 건강 기준 프로필입니다. 해당되는 항목만 변경하거나 선택해 주세요.</p>
+
+<div class="wizard-stepper">
+  <div class="wizard-step-dot active" data-step="1"><div class="wizard-step-circle">1</div><div class="wizard-step-label">기본정보</div></div>
+  <div class="wizard-step-dot" data-step="2"><div class="wizard-step-circle">2</div><div class="wizard-step-label">건강상태</div></div>
+  <div class="wizard-step-dot" data-step="3"><div class="wizard-step-circle">3</div><div class="wizard-step-label">신체기능</div></div>
+  <div class="wizard-step-dot" data-step="4"><div class="wizard-step-circle">4</div><div class="wizard-step-label">인지·정서</div></div>
+  <div class="wizard-step-dot" data-step="5"><div class="wizard-step-circle">5</div><div class="wizard-step-label">주거환경</div></div>
+</div>
+
+<form id="surveyForm">
+
+  <div class="wizard-panel active" data-step="1">
+    <div class="wizard-panel-title">기본 정보 입력</div>
+    <div class="field-panel">
+      <div class="field-row">
+        <div class="field-row-label">나이</div>
+        <div class="field-row-control"><input type="number" class="row-number-input" name="age" min="65" max="110" step="1" value="{{ saved.get('age', 72) }}"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">성별</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="sex">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('sex')==1 }}" data-value="1">남성</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('sex', 2)==2 }}" data-value="2">여성</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">결혼상태</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="marital_status">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('marital_status')==1 }}" data-value="1">미혼</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('marital_status', 2)==2 }}" data-value="2">기혼·배우자 있음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('marital_status')==3 }}" data-value="3">사별</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('marital_status')==4 }}" data-value="4">이혼</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('marital_status')==5 }}" data-value="5">별거</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">학교를 다닌 기간(년)</div>
+        <div class="field-row-control"><input type="number" class="row-number-input" name="education_years" min="0" max="30" step="1" value="{{ saved.get('education_years', 9) }}"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">혼자 거주 여부</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="living_alone">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('living_alone', 0)==0 }}" data-value="0">아니오</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('living_alone')==1 }}" data-value="1">예</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">현재 일을 하고 있나요?</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="current_job">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('current_job', 0)==0 }}" data-value="0">아니오</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('current_job')==1 }}" data-value="1">예</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">경제상태 만족</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="financial_satisfaction">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('financial_satisfaction')==0 }}" data-value="0">만족하지 않음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('financial_satisfaction', 1)==1 }}" data-value="1">만족함</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wizard-panel" data-step="2">
+    <div class="wizard-panel-title">건강 상태 입력</div>
+    <div class="field-panel">
+      <div class="field-row">
+        <div class="field-row-label">평소 건강상태</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="general_health_status">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('general_health_status')==1 }}" data-value="1">매우 건강함</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('general_health_status', 2)==2 }}" data-value="2">건강한 편</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('general_health_status')==3 }}" data-value="3">보통</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('general_health_status')==4 }}" data-value="4">나쁜 편</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('general_health_status')==5 }}" data-value="5">매우 나쁨</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">건강상태 만족</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="health_satisfaction">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('health_satisfaction')==0 }}" data-value="0">만족하지 않음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('health_satisfaction', 1)==1 }}" data-value="1">만족함</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">음주 빈도</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="drinking_frequency">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('drinking_frequency', 0)==0 }}" data-value="0">전혀 하지 않음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('drinking_frequency')==1 }}" data-value="1">월 1회 이하</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('drinking_frequency')==2 }}" data-value="2">월 2회 이상</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">시력 불편</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="visual_difficulty">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('visual_difficulty', 1)==1 }}" data-value="1">불편 없음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('visual_difficulty')==2 }}" data-value="2">약간 불편</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('visual_difficulty')==3 }}" data-value="3">매우 불편</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">청력 불편</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="hearing_difficulty">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('hearing_difficulty', 1)==1 }}" data-value="1">불편 없음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('hearing_difficulty')==2 }}" data-value="2">약간 불편</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('hearing_difficulty')==3 }}" data-value="3">매우 불편</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">5개 이상 약물 복용</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="polypharmacy">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('polypharmacy', 0)==0 }}" data-value="0">아니오</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('polypharmacy')==1 }}" data-value="1">예</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">현재 앓고 있는 만성질환 수</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="chronic_disease_count_group">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('chronic_disease_count_group', 0)==0 }}" data-value="0">없음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('chronic_disease_count_group')==1 }}" data-value="1">1~3개</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('chronic_disease_count_group')==2 }}" data-value="2">4개 이상</button>
+        </div>
+      </div>
+      <div class="field-row field-row-stacked">
+        <div class="field-row-label">진단받은 질환 (모두 선택)</div>
+        <div class="choice-group field-row-control-full">
+          {% for key, label in [('diagnosis_stroke','뇌졸중'), ('diagnosis_cad','협심증·심근경색'), ('diagnosis_arthritis','관절염'), ('diagnosis_osteoporosis','골다공증'), ('diagnosis_lumbar_sciatic_pain','요통·좌골신경통'), ('diagnosis_fracture_sequelae','골절·탈골·사고 후유증'), ('diagnosis_chronic_bronchitis_emphysema','만성기관지염·폐기종'), ('diagnosis_parkinson','파킨슨병'), ('diagnosis_insomnia','불면증'), ('diagnosis_urinary_incontinence','요실금'), ('diagnosis_anemia','빈혈')] %}
+          <button type="button" class="choice-pill" data-checkbox="true" data-name="{{ key }}" {% if saved.get(key) %}data-checked="1"{% endif %}>{{ label }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-row field-row-stacked">
+        <div class="field-row-label">현재 치료 여부</div>
+        <div class="choice-group field-row-control-full">
+          <button type="button" class="choice-pill" data-checkbox="true" data-name="treatment_depression" {% if saved.get('treatment_depression') %}data-checked="1"{% endif %}>우울증 치료 중</button>
+          <button type="button" class="choice-pill" data-checkbox="true" data-name="treatment_insomnia" {% if saved.get('treatment_insomnia') %}data-checked="1"{% endif %}>불면증 치료 중</button>
+          <button type="button" class="choice-pill" data-checkbox="true" data-name="treatment_bph" {% if saved.get('treatment_bph') %}data-checked="1"{% endif %}>전립선비대증 치료 중</button>
+          <button type="button" class="help-tip" aria-label="전립선비대증 치료 중 설명" data-tooltip="여성 또는 해당 없으면 체크하지 않습니다.">?</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wizard-panel" data-step="3">
+    <div class="wizard-panel-title">신체 기능 입력</div>
+    <p class="caption">각 동작을 보조기구 없이 수행하는 기준으로 답해 주세요.</p>
+    <div class="field-panel">
+      {% for key, label in [('lower_limb_strength_limitation','의자에서 5회 앉았다 일어나기'), ('run_400m_limitation','400m 정도 달리기'), ('walk_400m_limitation','400m 정도 걷기'), ('climb_10_stairs_limitation','쉬지 않고 계단 10개 오르기'), ('kneel_squat_limitation','무릎 굽히기·쪼그려 앉기'), ('reach_overhead_limitation','팔을 뻗어 머리 위 물체에 닿기'), ('lift_8kg_limitation','8kg 물건 들기·옮기기')] %}
+      <div class="field-row">
+        <div class="field-row-label">{{ label }}</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="{{ key }}">
+          <button type="button" class="choice-pill {{ 'active' if saved.get(key, 0)==0 }}" data-value="0">문제없이 할 수 있음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get(key)==1 }}" data-value="1">수행에 제한이 있음</button>
+        </div>
+      </div>
+      {% endfor %}
+      <div class="field-row">
+        <div class="field-row-label">평소 규칙적 운동</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="regular_exercise">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('regular_exercise')==0 }}" data-value="0">아니오</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('regular_exercise', 1)==1 }}" data-value="1">예</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label field-row-label-help">
+          <span>기본 일상생활(ADL)</span>
+          <button type="button" class="help-tip" aria-label="ADL 설명" data-tooltip="옷 입기, 세면, 목욕, 식사, 이동, 화장실 이용, 대소변 조절 중 하나라도 다른 사람의 도움이 필요하면 ‘도움 필요’를 선택해 주세요.">?</button>
+        </div>
+        <div class="choice-group field-row-control" data-type="single" data-name="adl_help_needed">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('adl_help_needed', 0)==0 }}" data-value="0">혼자 할 수 있음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('adl_help_needed')==1 }}" data-value="1">도움 필요</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label field-row-label-help">
+          <span>도구적 일상생활(IADL)</span>
+          <button type="button" class="help-tip" aria-label="IADL 설명" data-tooltip="몸단장, 집안일, 식사 준비, 빨래, 약 복용, 금전 관리, 외출, 물건 구매, 전화 사용, 교통수단 이용 중 하나라도 다른 사람의 도움이 필요하면 ‘도움 필요’를 선택해 주세요.">?</button>
+        </div>
+        <div class="choice-group field-row-control" data-type="single" data-name="iadl_help_needed">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('iadl_help_needed', 0)==0 }}" data-value="0">혼자 할 수 있음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('iadl_help_needed')==1 }}" data-value="1">도움 필요</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wizard-panel" data-step="4">
+    <div class="wizard-panel-title">심리·인지·영양 입력</div>
+    <div class="field-panel">
+      <div class="field-row field-row-stacked">
+        <div class="field-row-label">우울감 점수 0~15</div>
+        <div class="slider-wrap field-row-control-full">
+          <output id="depressionScoreValue" for="depressionScoreSlider">{{ saved.get('depression_score_paper', 0) }}</output>
+          <input type="range" id="depressionScoreSlider" name="depression_score_paper" min="0" max="15" value="{{ saved.get('depression_score_paper', 0) }}">
+        </div>
+      </div>
+      <div class="field-row field-row-stacked">
+        <div class="field-row-label">인지 기능 점수 0~30</div>
+        <div class="slider-wrap field-row-control-full">
+          <output id="cognitiveScoreValue" for="cognitiveScoreSlider">{{ saved.get('cognitive_score_mmse', 30) }}</output>
+          <input type="range" id="cognitiveScoreSlider" name="cognitive_score_mmse" min="0" max="30" value="{{ saved.get('cognitive_score_mmse', 30) }}">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">영양섭취 상태</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="nutrition_status">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('nutrition_status', 0)==0 }}" data-value="0">양호</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('nutrition_status')==1 }}" data-value="1">보통</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('nutrition_status')==2 }}" data-value="2">불량</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wizard-panel" data-step="5">
+    <div class="wizard-panel-title">주거·환경 입력</div>
+    <div class="field-panel">
+      <div class="field-row">
+        <div class="field-row-label">현재 주택 종류</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="housing_type">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('housing_type')==1 }}" data-value="1">단독주택</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('housing_type', 2)==2 }}" data-value="2">아파트</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('housing_type')==3 }}" data-value="3">연립·다세대 주택</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('housing_type')==4 }}" data-value="4">기타</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">노인이 생활하기 편리한 정도</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="elderly_friendly_accessibility">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('elderly_friendly_accessibility')==1 }}" data-value="1">생활하기 불편함</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('elderly_friendly_accessibility', 2)==2 }}" data-value="2">노인 배려 설비 없음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('elderly_friendly_accessibility')==3 }}" data-value="3">노인 배려 설비 있음</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">현재 주택 만족</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="housing_satisfaction">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('housing_satisfaction')==0 }}" data-value="0">만족하지 않음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('housing_satisfaction', 1)==1 }}" data-value="1">만족함</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-row-label">지역사회 환경 만족</div>
+        <div class="choice-group field-row-control" data-type="single" data-name="community_satisfaction">
+          <button type="button" class="choice-pill {{ 'active' if saved.get('community_satisfaction')==0 }}" data-value="0">만족하지 않음</button>
+          <button type="button" class="choice-pill {{ 'active' if saved.get('community_satisfaction', 1)==1 }}" data-value="1">만족함</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p id="formError" class="alert alert-error" style="display:none;"></p>
+
+  <div class="btn-row wizard-nav">
+    <button type="button" id="wizardPrevBtn" class="btn btn-secondary" style="visibility:hidden;">← 이전으로</button>
+    <button type="button" id="wizardNextBtn" class="btn">다음 →</button>
+    <button type="submit" class="btn" id="submitBtn" style="display:none;">낙상 위험 분석하기 →</button>
+  </div>
+</form>
+
+<script>
+const TOTAL_STEPS = 5;
+let currentStep = 1;
+
+function positionSliderOutput(slider, output) {
+  const min = Number(slider.min), max = Number(slider.max), val = Number(slider.value);
+  const percent = max > min ? (val - min) / (max - min) : 0;
+  const thumbSize = 16;
+  const offset = thumbSize / 2 - percent * thumbSize;
+  output.textContent = val;
+  output.style.left = `calc(${percent * 100}% + ${offset}px)`;
+}
+
+document.querySelectorAll(".slider-wrap input[type=range]").forEach((slider) => {
+  const output = slider.previousElementSibling;
+  positionSliderOutput(slider, output);
+  slider.addEventListener("input", () => positionSliderOutput(slider, output));
+});
+
+// 도움말(?) 툴팁: 마우스/키보드뿐 아니라 터치에서도 열 수 있게 처리
+document.querySelectorAll('.help-tip').forEach((tip) => {
+  tip.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const willOpen = !tip.classList.contains('open');
+    document.querySelectorAll('.help-tip.open').forEach((other) => other.classList.remove('open'));
+    if (willOpen) tip.classList.add('open');
+  });
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.help-tip.open').forEach((tip) => tip.classList.remove('open'));
+});
+
+document.querySelectorAll('.choice-group[data-type="single"]').forEach((group) => {
+  group.querySelectorAll(".choice-pill").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      group.querySelectorAll(".choice-pill").forEach((p) => p.classList.remove("active"));
+      pill.classList.add("active");
+    });
+  });
+});
+
+document.querySelectorAll('.choice-pill[data-checkbox="true"]').forEach((pill) => {
+  if (pill.dataset.checked === "1") pill.classList.add("active");
+  pill.addEventListener("click", () => pill.classList.toggle("active"));
+});
+
+function showStep(n) {
+  document.querySelectorAll(".wizard-panel").forEach((panel) => {
+    panel.classList.toggle("active", Number(panel.dataset.step) === n);
+  });
+  document.querySelectorAll(".wizard-step-dot").forEach((dot) => {
+    const s = Number(dot.dataset.step);
+    dot.classList.toggle("active", s === n);
+    dot.classList.toggle("done", s < n);
+  });
+  document.getElementById("wizardPrevBtn").style.visibility = n === 1 ? "hidden" : "visible";
+  document.getElementById("wizardNextBtn").style.display = n === TOTAL_STEPS ? "none" : "inline-flex";
+  document.getElementById("submitBtn").style.display = n === TOTAL_STEPS ? "inline-flex" : "none";
+  currentStep = n;
+  const stepper = document.querySelector(".wizard-stepper");
+  if (stepper) window.scrollTo({ top: stepper.offsetTop - 20, behavior: "smooth" });
+}
+
+document.getElementById("wizardNextBtn").addEventListener("click", () => {
+  if (currentStep < TOTAL_STEPS) showStep(currentStep + 1);
+});
+document.getElementById("wizardPrevBtn").addEventListener("click", () => {
+  if (currentStep > 1) showStep(currentStep - 1);
+});
+document.querySelectorAll(".wizard-step-dot").forEach((dot) => {
+  dot.addEventListener("click", () => showStep(Number(dot.dataset.step)));
+});
+
+document.getElementById("surveyForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const submitBtn = document.getElementById("submitBtn");
+  const errorBox = document.getElementById("formError");
+  errorBox.style.display = "none";
+
+  const modelInput = {};
+
+  form.querySelectorAll("input[type=number], input[type=range]").forEach((el) => {
+    modelInput[el.name] = parseInt(el.value, 10) || 0;
+  });
+
+  document.querySelectorAll('.choice-group[data-type="single"]').forEach((group) => {
+    const active = group.querySelector(".choice-pill.active");
+    modelInput[group.dataset.name] = active ? parseInt(active.dataset.value, 10) : 0;
+  });
+
+  document.querySelectorAll('.choice-pill[data-checkbox="true"]').forEach((pill) => {
+    modelInput[pill.dataset.name] = pill.classList.contains("active") ? 1 : 0;
+  });
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "분석 중...";
+
+  try {
+    const res = await fetch("/api/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model_input: modelInput }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "예측에 실패했습니다.");
+    window.location.href = "/result";
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = "block";
+    submitBtn.disabled = false;
+    submitBtn.textContent = "낙상 위험 분석하기 →";
+  }
+});
+</script>
+{% endblock %}

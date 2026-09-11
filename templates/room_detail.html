@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}안넘어집 | {{ info.label }} 상세{% endblock %}
+{% block content %}
+<span class="badge tag-{{ info.priority }}">{{ info.priority_label }}</span>
+<p class="medi-subtitle" style="margin-top:0.6rem;">{{ info.desc }}</p>
+
+<div class="result-grid" style="align-items:start;">
+  <div>
+    <div class="btn-row" style="margin-bottom:0.8rem;">
+      <button type="button" class="btn btn-secondary" id="beforeBtn">개선 전 (Before)</button>
+      <button type="button" class="btn btn-secondary" id="afterBtn">개선 후 (After)</button>
+    </div>
+    <!-- 실제 3D 모델(GLB/glTF)이 준비되면 아래 div를
+         <model-viewer src="..."> 웹 컴포넌트로 교체하면 됩니다. -->
+    <div class="room-3d-viewer" id="viewer">
+      <div class="badge-mode" id="viewerBadge" style="background:{{ '#C1543C' }};">개선 전 (Before)</div>
+      <div class="icon-big">{{ info.icon }}</div>
+      <div style="margin-top:0.6rem; font-size:1.1rem; font-weight:600; font-family:'Fraunces', serif;">{{ info.label }} 3D 뷰 (Placeholder)</div>
+      <div style="margin-top:0.3rem; font-size:0.85rem; color:#4B5C54; text-align:center; max-width:80%;">
+        실제 3D 모델(GLB/glTF)이 준비되면 이 영역에 &lt;model-viewer&gt; 컴포넌트로 교체되어<br>회전/줌이 가능한 3D 화면이 표시됩니다.
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h4>추천 개선 항목</h4>
+    {% for item in recommendations %}
+    <div class="product-card">
+      <div class="product-swatch">{{ item.icon }}</div>
+      <div>
+        <div style="font-weight:600;">{{ item.title }}</div>
+        <div class="medi-subtitle" style="font-size:0.85rem; margin-top:0.15rem;">{{ item.desc }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div style="margin-top:1.2rem;">
+{% if has_ai_result %}
+  <p class="medi-subtitle" style="font-size:0.9rem;">💡 현재 공간에 대한 AI 맞춤 분석이 완료되어 있습니다. 분석 결과를 다시 확인하거나 가구 배치를 수정할 수 있습니다.</p>
+  <div class="btn-row">
+    <a href="{{ url_for('layout_editor_page') }}" class="btn">← 분석 결과 다시 보기</a>
+    <button type="button" class="btn btn-secondary" id="reAnalyzeBtn">✏️ 새 배치로 다시 분석하기</button>
+  </div>
+{% else %}
+  <p class="medi-subtitle" style="font-size:0.9rem;">💡 표준 추천이 아니라 우리 집 실제 배치를 기준으로 AI 맞춤 분석을 진행할 수 있습니다.</p>
+  <a href="{{ url_for('layout_editor_page') }}" class="btn btn-block">🧠 내 방 배치로 맞춤 분석하기</a>
+{% endif %}
+</div>
+
+<div class="btn-row" style="margin-top:1rem;">
+  <a href="{{ url_for('floorplan_page') }}" class="btn btn-secondary">← 평면도로 돌아가기</a>
+  <a href="{{ url_for('home') }}" class="btn btn-secondary">처음으로</a>
+</div>
+
+<script>
+const beforeBtn = document.getElementById("beforeBtn");
+const afterBtn = document.getElementById("afterBtn");
+const badge = document.getElementById("viewerBadge");
+beforeBtn.addEventListener("click", () => { badge.textContent = "개선 전 (Before)"; badge.style.background = "#C1543C"; });
+afterBtn.addEventListener("click", () => { badge.textContent = "개선 후 (After)"; badge.style.background = "#6E9C86"; });
+
+const reAnalyzeBtn = document.getElementById("reAnalyzeBtn");
+if (reAnalyzeBtn) {
+  reAnalyzeBtn.addEventListener("click", async () => {
+    await fetch("/api/reset_ai_result", { method: "POST" });
+    window.location.href = "{{ url_for('layout_editor_page') }}";
+  });
+}
+</script>
+{% endblock %}

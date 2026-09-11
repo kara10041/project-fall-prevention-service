@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>안넘어집 | 로그인</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body class="auth-body">
+<div class="auth-shell">
+  <a href="{{ url_for('home') }}" class="auth-brand">🏡 안넘어집</a>
+
+  <div class="auth-card">
+    <h1 class="auth-title">로그인</h1>
+    <p class="auth-subtitle">낙상 위험 분석과 맞춤 안전 가이드를 이용하려면 로그인해 주세요.</p>
+
+    <form id="login-form" class="auth-form" novalidate>
+      <label>이메일
+        <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" />
+      </label>
+      <label>비밀번호
+        <input type="password" name="password" required autocomplete="current-password" placeholder="비밀번호" />
+      </label>
+      <p class="auth-error" id="login-error"></p>
+      <button type="submit" class="btn btn-block" id="login-submit">로그인</button>
+    </form>
+
+    <p class="auth-switch">아직 계정이 없으신가요? <a href="{{ url_for('signup_page') }}">회원가입</a></p>
+  </div>
+</div>
+
+<script>
+document.getElementById("login-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.target;
+  const errorEl = document.getElementById("login-error");
+  const submitBtn = document.getElementById("login-submit");
+  errorEl.textContent = "";
+  submitBtn.disabled = true;
+  submitBtn.textContent = "로그인 중...";
+
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: form.email.value,
+        password: form.password.value,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "로그인에 실패했습니다.");
+    window.location.href = "{{ url_for('home') }}";
+  } catch (error) {
+    errorEl.textContent = error.message;
+    submitBtn.disabled = false;
+    submitBtn.textContent = "로그인";
+  }
+});
+</script>
+</body>
+</html>

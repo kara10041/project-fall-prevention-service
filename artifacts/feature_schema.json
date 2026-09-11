@@ -1,0 +1,272 @@
+{
+  "feature_order": [
+    "근력상태_의자나 침대에 앉았다가 일어나기 5회 반복",
+    "동작수행 어려움_운동장 한 바퀴(400m)정도 뛰기",
+    "동작수행 어려움_운동장 한 바퀴(400m)정도 걷기",
+    "동작수행 어려움_쉬지않고 10계단 오르기",
+    "동작수행 어려움_몸 구부리거나 쭈그려 앉거나 무릎 꿇기",
+    "동작수행 어려움_머리보다 높은 곳에 있는 것 손 뻗쳐 닿기",
+    "동작수행 어려움_쌀 1말(8kg) 정도 물건 들어 올리거나 옮기기",
+    "Nutritional",
+    "ADL",
+    "IADL",
+    "평소 운동 여부",
+    "GDS",
+    "인지기능_총점",
+    "노인이 생활하는데 편리함 정도",
+    "현재 살고있는 주택에 대한 만족도",
+    "지역사회 환경 만족도_지역사회 환경 전반",
+    "노인 조사 대상자 만연령",
+    "노인 조사 대상자 성별",
+    "노인 조사 대상자 교육연수",
+    "노인가구형태",
+    "만족도_경제상태",
+    "현재 경제활동 여부",
+    "평소의 건강상태",
+    "만족도_건강상태",
+    "지난 1년 간 음주 빈도",
+    "일상생활의 불편함_시력",
+    "일상생활의 불편함_청력",
+    "현재 3개월 이상 복용하고 있는 의사처방약(종류)",
+    "의사진단 만성질환 총 수",
+    "의사진단 만성질환 유무_뇌졸중(중풍, 뇌경색)",
+    "의사진단 만성질환 유무_협심증, 심근경색증",
+    "의사진단 만성질환 유무_골관절염(퇴행성관절염), 류머티즘 관절염",
+    "의사진단 만성질환 유무_골다공증",
+    "의사진단 만성질환 유무_요통, 좌골신경통",
+    "의사진단 만성질환 유무_골절, 탈골 및 사고 후유증",
+    "의사진단 만성질환 유무_만성기관지염, 폐기종",
+    "의사진단 만성질환 유무_파킨슨병",
+    "의사진단 만성질환 유무_불면증",
+    "의사진단 만성질환 유무_요실금",
+    "의사진단 만성질환 유무_빈혈",
+    "치료 여부_우울증",
+    "치료 여부_불면증",
+    "치료 여부_전립선 비대증",
+    "RES_MAR_미혼",
+    "RES_MAR_별거",
+    "RES_MAR_사별",
+    "RES_MAR_유배우",
+    "RES_MAR_이혼",
+    "Q1_기타",
+    "Q1_단독주택",
+    "Q1_아파트",
+    "Q1_연립다세대"
+  ],
+  "n_features": 52,
+  "target_column": "낙상유무",
+  "id_columns": [
+    "개인 ID"
+  ],
+  "feature_name_policy": "원본 52개 설문 문항명을 유지. 노트북의 clean_colname 결과는 feature_name_map에 별도 저장.",
+  "feature_name_map": [
+    {
+      "original": "근력상태_의자나 침대에 앉았다가 일어나기 5회 반복",
+      "cleaned_in_notebook": "근력상태_의자나_침대에_앉았다가_일어나기_5회_반복"
+    },
+    {
+      "original": "동작수행 어려움_운동장 한 바퀴(400m)정도 뛰기",
+      "cleaned_in_notebook": "동작수행_어려움_운동장_한_바퀴_400m_정도_뛰기"
+    },
+    {
+      "original": "동작수행 어려움_운동장 한 바퀴(400m)정도 걷기",
+      "cleaned_in_notebook": "동작수행_어려움_운동장_한_바퀴_400m_정도_걷기"
+    },
+    {
+      "original": "동작수행 어려움_쉬지않고 10계단 오르기",
+      "cleaned_in_notebook": "동작수행_어려움_쉬지않고_10계단_오르기"
+    },
+    {
+      "original": "동작수행 어려움_몸 구부리거나 쭈그려 앉거나 무릎 꿇기",
+      "cleaned_in_notebook": "동작수행_어려움_몸_구부리거나_쭈그려_앉거나_무릎_꿇기"
+    },
+    {
+      "original": "동작수행 어려움_머리보다 높은 곳에 있는 것 손 뻗쳐 닿기",
+      "cleaned_in_notebook": "동작수행_어려움_머리보다_높은_곳에_있는_것_손_뻗쳐_닿기"
+    },
+    {
+      "original": "동작수행 어려움_쌀 1말(8kg) 정도 물건 들어 올리거나 옮기기",
+      "cleaned_in_notebook": "동작수행_어려움_쌀_1말_8kg_정도_물건_들어_올리거나_옮기기"
+    },
+    {
+      "original": "Nutritional",
+      "cleaned_in_notebook": "Nutritional"
+    },
+    {
+      "original": "ADL",
+      "cleaned_in_notebook": "ADL"
+    },
+    {
+      "original": "IADL",
+      "cleaned_in_notebook": "IADL"
+    },
+    {
+      "original": "평소 운동 여부",
+      "cleaned_in_notebook": "평소_운동_여부"
+    },
+    {
+      "original": "GDS",
+      "cleaned_in_notebook": "GDS"
+    },
+    {
+      "original": "인지기능_총점",
+      "cleaned_in_notebook": "인지기능_총점"
+    },
+    {
+      "original": "노인이 생활하는데 편리함 정도",
+      "cleaned_in_notebook": "노인이_생활하는데_편리함_정도"
+    },
+    {
+      "original": "현재 살고있는 주택에 대한 만족도",
+      "cleaned_in_notebook": "현재_살고있는_주택에_대한_만족도"
+    },
+    {
+      "original": "지역사회 환경 만족도_지역사회 환경 전반",
+      "cleaned_in_notebook": "지역사회_환경_만족도_지역사회_환경_전반"
+    },
+    {
+      "original": "노인 조사 대상자 만연령",
+      "cleaned_in_notebook": "노인_조사_대상자_만연령"
+    },
+    {
+      "original": "노인 조사 대상자 성별",
+      "cleaned_in_notebook": "노인_조사_대상자_성별"
+    },
+    {
+      "original": "노인 조사 대상자 교육연수",
+      "cleaned_in_notebook": "노인_조사_대상자_교육연수"
+    },
+    {
+      "original": "노인가구형태",
+      "cleaned_in_notebook": "노인가구형태"
+    },
+    {
+      "original": "만족도_경제상태",
+      "cleaned_in_notebook": "만족도_경제상태"
+    },
+    {
+      "original": "현재 경제활동 여부",
+      "cleaned_in_notebook": "현재_경제활동_여부"
+    },
+    {
+      "original": "평소의 건강상태",
+      "cleaned_in_notebook": "평소의_건강상태"
+    },
+    {
+      "original": "만족도_건강상태",
+      "cleaned_in_notebook": "만족도_건강상태"
+    },
+    {
+      "original": "지난 1년 간 음주 빈도",
+      "cleaned_in_notebook": "지난_1년_간_음주_빈도"
+    },
+    {
+      "original": "일상생활의 불편함_시력",
+      "cleaned_in_notebook": "일상생활의_불편함_시력"
+    },
+    {
+      "original": "일상생활의 불편함_청력",
+      "cleaned_in_notebook": "일상생활의_불편함_청력"
+    },
+    {
+      "original": "현재 3개월 이상 복용하고 있는 의사처방약(종류)",
+      "cleaned_in_notebook": "현재_3개월_이상_복용하고_있는_의사처방약_종류"
+    },
+    {
+      "original": "의사진단 만성질환 총 수",
+      "cleaned_in_notebook": "의사진단_만성질환_총_수"
+    },
+    {
+      "original": "의사진단 만성질환 유무_뇌졸중(중풍, 뇌경색)",
+      "cleaned_in_notebook": "의사진단_만성질환_유무_뇌졸중_중풍_뇌경색"
+    },
+    {
+      "original": "의사진단 만성질환 유무_협심증, 심근경색증",
+      "cleaned_in_notebook": "의사진단_만성질환_유무_협심증_심근경색증"
+    },
+    {
+      "original": "의사진단 만성질환 유무_골관절염(퇴행성관절염), 류머티즘 관절염",
+      "cleaned_in_notebook": "의사진단_만성질환_유무_골관절염_퇴행성관절염_류머티즘_관절염"
+    },
+    {
+      "original": "의사진단 만성질환 유무_골다공증",
+      "cleaned_in_notebook": "의사진단_만성질환_유무_골다공증"
+    },
+    {
+      "original": "의사진단 만성질환 유무_요통, 좌골신경통",
+      "cleaned_in_notebook": "의사진단_만성질환_유무_요통_좌골신경통"
+    },
+    {
+      "original": "의사진단 만성질환 유무_골절, 탈골 및 사고 후유증",
+      "cleaned_in_notebook": "의사진단_만성질환_유무_골절_탈골_및_사고_후유증"
+    },
+    {
+      "original": "의사진단 만성질환 유무_만성기관지염, 폐기종",
+      "cleaned_in_notebook": "의사진단_만성질환_유무_만성기관지염_폐기종"
+    },
+    {
+      "original": "의사진단 만성질환 유무_파킨슨병",
+      "cleaned_in_notebook": "의사진단_만성질환_유무_파킨슨병"
+    },
+    {
+      "original": "의사진단 만성질환 유무_불면증",
+      "cleaned_in_notebook": "의사진단_만성질환_유무_불면증"
+    },
+    {
+      "original": "의사진단 만성질환 유무_요실금",
+      "cleaned_in_notebook": "의사진단_만성질환_유무_요실금"
+    },
+    {
+      "original": "의사진단 만성질환 유무_빈혈",
+      "cleaned_in_notebook": "의사진단_만성질환_유무_빈혈"
+    },
+    {
+      "original": "치료 여부_우울증",
+      "cleaned_in_notebook": "치료_여부_우울증"
+    },
+    {
+      "original": "치료 여부_불면증",
+      "cleaned_in_notebook": "치료_여부_불면증"
+    },
+    {
+      "original": "치료 여부_전립선 비대증",
+      "cleaned_in_notebook": "치료_여부_전립선_비대증"
+    },
+    {
+      "original": "RES_MAR_미혼",
+      "cleaned_in_notebook": "RES_MAR_미혼"
+    },
+    {
+      "original": "RES_MAR_별거",
+      "cleaned_in_notebook": "RES_MAR_별거"
+    },
+    {
+      "original": "RES_MAR_사별",
+      "cleaned_in_notebook": "RES_MAR_사별"
+    },
+    {
+      "original": "RES_MAR_유배우",
+      "cleaned_in_notebook": "RES_MAR_유배우"
+    },
+    {
+      "original": "RES_MAR_이혼",
+      "cleaned_in_notebook": "RES_MAR_이혼"
+    },
+    {
+      "original": "Q1_기타",
+      "cleaned_in_notebook": "Q1_기타"
+    },
+    {
+      "original": "Q1_단독주택",
+      "cleaned_in_notebook": "Q1_단독주택"
+    },
+    {
+      "original": "Q1_아파트",
+      "cleaned_in_notebook": "Q1_아파트"
+    },
+    {
+      "original": "Q1_연립다세대",
+      "cleaned_in_notebook": "Q1_연립다세대"
+    }
+  ]
+}

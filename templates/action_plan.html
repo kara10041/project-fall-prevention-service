@@ -1,0 +1,535 @@
+{% extends "base.html" %}
+{% block title %}안넘어집 | 맞춤 공간 개선안{% endblock %}
+{% block main_class %} action-plan-main{% endblock %}
+{% block content %}
+<section class="ap-page-head">
+  <div>
+    <div class="eyebrow">STEP 4 · 맞춤 공간 개선</div>
+    <h2 class="medi-title">맞춤 공간 개선안</h2>
+    <p class="medi-subtitle">건강·생활 정보와 직접 구성한 {{ room_label }} 평면도를 함께 살펴, 어디를 어떻게 바꾸면 좋을지 확인합니다.</p>
+  </div>
+  <a href="{{ url_for('layout_editor_page') }}" class="btn btn-secondary ap-back-btn">← 배치 수정하기</a>
+</section>
+
+<div id="actionPlanBox"></div>
+
+<script>
+function escapeHtml(text) {
+  return String(text ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+const DIFFICULTY_LABELS = { 1: "쉬움", 2: "보통", 3: "어려움" };
+
+async function loadActionPlan(box) {
+  box.innerHTML = `<div class="ap-loading ap-loading-large"><span class="spinner spinner-dark"></span><div><b>맞춤 개선안을 준비하고 있어요.</b><span>건강·생활 정보와 공간 상태를 함께 살펴보는 중입니다.</span></div></div>`;
+  try {
+    const res = await fetch("/api/generate_action_plan", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "실행 계획 생성에 실패했습니다.");
+    renderActionPlan(box, data.groups || [], data.supplementary || {}, data.warnings || []);
+  } catch (err) {
+    box.innerHTML = `<div class="alert alert-error"><b>개선안을 만들지 못했습니다.</b><br><code>${escapeHtml(err.message)}</code><br><span class="caption">서버가 재시작되었거나 AI 요청이 오래 걸린 경우입니다.</span></div>
+      <button type="button" id="retryActionPlanBtn" class="btn" style="margin-top:.8rem;">다시 시도</button>`;
+    document.getElementById("retryActionPlanBtn")?.addEventListener("click", () => loadActionPlan(box));
+  }
+}
+
+function renderActionPlan(box, groups, supplementary = {}, warnings = []) {
+  let notices = "";
+  if (warnings.length) {
+    notices += `<div class="alert alert-warning"><b>일부 항목은 기본 실행계획으로 표시됩니다.</b><br>${warnings.map(escapeHtml).join("<br>")}</div>`;
+  }
+
+  let cards = "";
+  groups.forEach((group, groupIndex) => {
+    const groupNo = escapeHtml(String(group.display_number ?? group.priority ?? groupIndex + 1));
+    let optionsHtml = "";
+
+    (group.options || []).forEach((opt, i) => {
+      const plan = (group.action_plans || [])[i] || {};
+      const checked = false;
+      const difficulty = Number(plan.difficulty) || 0;
+      const steps = (plan.execution_steps || []).map((s) => `<li>${escapeHtml(s)}</li>`).join("");
+      const effectsList = plan.expected_effects || [];
+      const minutes = plan.estimated_minutes ?? "-";
+      const helper = plan.requires_helper ? "도움 필요" : "혼자 가능";
+      const priceMin = Number(plan.estimated_price_krw_min) || 0;
+      const priceMax = Number(plan.estimated_price_krw_max) || 0;
+      const priceLabel = priceMax ? `약 ${priceMin.toLocaleString()}~${priceMax.toLocaleString()}원` : "추가 비용 없음";
+      const shoppingLinks = plan.shopping_links || [];
+      const itemsHtml = shoppingLinks.length ? shoppingLinks.map((entry) => {
+        const links = entry.links || {};
+        const shops = [
+          links.coupang ? `<a href="${links.coupang}" target="_blank" rel="noopener" class="shop-link">쿠팡</a>` : "",
+          links.naver ? `<a href="${links.naver}" target="_blank" rel="noopener" class="shop-link">네이버쇼핑</a>` : "",
+        ].join("");
+        return `<span class="shop-item">${escapeHtml(entry.item || "준비물")} ${shops}</span>`;
+      }).join("") : "";
+
+      // 기대 효과는 details 안에 숨기지 않고 항상 보이게 해서, 같은 위험요인 안의 여러
+      // 대안끼리 "이건 이만큼 효과가 있다"를 details를 일일이 펼치지 않고도 나란히
+      // 비교할 수 있게 합니다.
+      const effectsHtml = effectsList.length
+        ? `<ul class="ap-effect-preview-list">${effectsList.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ul>`
+        : `<p class="ap-effect-preview-empty">예상 효과 정보가 없습니다.</p>`;
+
+      optionsHtml += `<label class="ap-option ap-option-modern${checked ? " ap-option-selected" : ""}">
+        <input type="checkbox" class="ap-choice" name="ap-${group.priority}" value="${i}" data-minutes="${Number(minutes) || 0}" data-price-min="${priceMin}" data-price-max="${priceMax}" ${checked ? "checked" : ""}>
+        <span class="ap-radio-dot"></span>
+        <div class="ap-option-body">
+          <div class="ap-option-topline">
+            <div class="ap-option-title">${escapeHtml(opt)}</div>
+            ${i === 0 ? '<span class="ap-recommend-badge">추천</span>' : '<span class="ap-alt-badge">대안</span>'}
+          </div>
+          <div class="ap-option-meta ap-option-meta-chips">
+            <span>약 ${escapeHtml(minutes)}분</span>
+            <span>${escapeHtml(DIFFICULTY_LABELS[difficulty] || "난이도 미정")}</span>
+            <span>${helper}</span>
+            <span>${priceLabel}</span>
+          </div>
+          <div class="ap-effect-preview">
+            <span class="ap-effect-preview-label">이 방법을 선택하면</span>
+            ${effectsHtml}
+          </div>
+          ${itemsHtml ? `<div class="ap-shop-row">준비물 ${itemsHtml}</div>` : ""}
+          ${steps ? `<details class="ap-option-details"><summary>실행 방법 보기</summary><div class="ap-option-detail-body"><p class="ap-detail-label">실행 방법</p><ol>${steps}</ol></div></details>` : ""}
+        </div>
+      </label>`;
+    });
+
+    const shapFactor = group.shap_factor || "";
+    const sourceIsAiOnly = String(group.recommendation_source || "").startsWith("AI_ONLY");
+    // 내부 용어(SHAP, RAG, 매핑)를 사용자 화면에 노출하지 않습니다.
+    // 무엇을 근거로 이 카드가 나왔는지만 건강 설문 / 공간 점검으로 구분해 쉽게 설명합니다.
+    const factorBadge = shapFactor
+      ? `<div class="ap-factor-badge"><span class="ap-factor-badge-icon">♥</span><div><b>건강 설문에서 확인된 점</b><p>${escapeHtml(shapFactor)}</p></div></div>`
+      : (sourceIsAiOnly
+          ? `<div class="ap-factor-badge ap-factor-badge-neutral"><span class="ap-factor-badge-icon">✨</span><div><b>공간 점검을 바탕으로 한 제안</b><p>이 위험에 딱 맞는 참고 자료를 찾기 어려워, 사용자가 체크한 공간 문제를 바탕으로 AI가 보완 방법을 제안했습니다.</p></div></div>`
+          : `<div class="ap-factor-badge ap-factor-badge-neutral"><span class="ap-factor-badge-icon">📍</span><div><b>공간 점검에서 확인된 점</b><p>사용자가 체크한 공간 상태와 현재 가구 배치를 바탕으로 확인된 위험입니다.</p></div></div>`);
+
+    cards += `<article class="ap-card ap-card-modern">
+      <div class="ap-card-head ap-card-head-modern">
+        <div class="ap-priority-badge"><span>${groupNo}</span><b>${groupNo}순위</b></div>
+        <div><div class="ap-card-kicker">${groupNo}순위 개선 항목</div><div class="ap-card-title">${escapeHtml(group.floorplan_problem || "공간 개선 필요")}</div></div>
+      </div>
+      ${factorBadge}
+      <div class="ap-options">${optionsHtml}</div>
+    </article>`;
+  });
+
+  let supplementaryHtml = "";
+  if ((supplementary.requests || []).length) {
+    const reqItems = (supplementary.requests || []).map((r) => `<li><b>${escapeHtml(r.label || "추가 메모")}</b> · ${escapeHtml(r.text || "")}</li>`).join("");
+    supplementaryHtml = `<details class="ap-supplementary"><summary>내가 추가로 적은 공간 요청사항</summary><div class="ap-supplementary-body"><ul>${reqItems}</ul>${supplementary.advice ? `<p>${escapeHtml(supplementary.advice)}</p>` : ""}</div></details>`;
+  }
+
+  box.innerHTML = `${notices}
+    <section class="ap-select-shell" id="apSelectShell">
+      <div class="ap-section-head">
+        <div><span class="ap-section-kicker">1. 개선 방법 선택</span><h3>우선순위를 보고, 실천할 방법만 골라주세요.</h3><p>각 문제마다 <b>최대 1개</b>까지 선택할 수 있습니다. 지금 하기 어려운 순위는 선택하지 않아도 됩니다.</p></div>
+        <span class="ap-count-pill">${groups.length}개 개선 지점</span>
+      </div>
+      <div class="ap-selection-layout">
+        <div class="ap-selection-main">
+          <div class="ap-card-grid">${cards}</div>
+          ${supplementaryHtml}
+        </div>
+        <aside class="ap-selection-summary" id="apSelectionSummary">
+          <div class="ap-selection-summary-kicker">선택 요약</div>
+          <h4>이번에 실천할 개선안</h4>
+          <div class="ap-total-row"><span>선택한 항목</span><b id="apSelectedCount">0개</b></div>
+          <div class="ap-total-row"><span>예상 총 소요시간</span><b id="apTotalMinutes">0분</b></div>
+          <div class="ap-total-row ap-total-price"><span>예상 총 비용</span><b id="apTotalPrice">0원</b></div>
+          <p>선택한 방법들의 예상 시간과 비용을 합산한 값입니다.</p>
+        </aside>
+      </div>
+      <div class="ap-select-footer">
+        <p>시간과 가격은 참고용 예상치이며 실제 상황에 따라 달라질 수 있습니다.</p>
+        <button type="button" id="confirmActionPlanBtn" class="btn ap-confirm-btn">선택 완료 · 개선 전후 보기 →</button>
+      </div>
+    </section>`;
+
+  function updateSelectionSummary() {
+    const checked = [...box.querySelectorAll('.ap-choice:checked')];
+    const totalMinutes = checked.reduce((sum, el) => sum + (Number(el.dataset.minutes) || 0), 0);
+    const priceMin = checked.reduce((sum, el) => sum + (Number(el.dataset.priceMin) || 0), 0);
+    const priceMax = checked.reduce((sum, el) => sum + (Number(el.dataset.priceMax) || 0), 0);
+    box.querySelector('#apSelectedCount').textContent = `${checked.length}개`;
+    box.querySelector('#apTotalMinutes').textContent = `${totalMinutes.toLocaleString()}분`;
+    box.querySelector('#apTotalPrice').textContent = priceMax > 0
+      ? `약 ${priceMin.toLocaleString()}~${priceMax.toLocaleString()}원`
+      : '0원';
+  }
+
+  box.querySelectorAll('.ap-choice').forEach((choice) => {
+    choice.addEventListener("change", (e) => {
+      const optionsWrap = e.target.closest(".ap-options");
+      if (e.target.checked) {
+        optionsWrap.querySelectorAll('.ap-choice').forEach((other) => {
+          if (other !== e.target) other.checked = false;
+        });
+      }
+      optionsWrap.querySelectorAll(".ap-option").forEach((el) => {
+        const input = el.querySelector('.ap-choice');
+        el.classList.toggle("ap-option-selected", !!input?.checked);
+      });
+      updateSelectionSummary();
+    });
+  });
+  updateSelectionSummary();
+
+  box.querySelector("#confirmActionPlanBtn")?.addEventListener("click", async (e) => {
+    const selections = {};
+    let selectedCount = 0;
+    groups.forEach((group) => {
+      const checkedInput = box.querySelector(`input[name="ap-${group.priority}"]:checked`);
+      selections[String(group.priority)] = checkedInput ? Number(checkedInput.value) : null;
+      if (checkedInput) selectedCount += 1;
+    });
+    if (!selectedCount) {
+      alert("실천할 개선 방법을 최소 1개 선택해 주세요.");
+      return;
+    }
+
+    const confirmBtn = e.currentTarget;
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<span class="spinner"></span>개선 평면도 만드는 중...';
+
+    try {
+      const res = await fetch("/api/confirm_action_plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selections }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "정리에 실패했습니다.");
+      renderComparisonImages(box, data);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      alert(err.message);
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "선택 완료 · 개선 전후 보기 →";
+    }
+  });
+}
+
+function iconForImprovement(text) {
+  const t = String(text || "");
+  if (/손잡이|그랩바|난간/.test(t)) return "↔";
+  if (/조명|등|센서/.test(t)) return "☀";
+  if (/매트|미끄럼/.test(t)) return "▧";
+  if (/문턱|단차/.test(t)) return "⌁";
+  if (/이동|옮|배치/.test(t)) return "⇄";
+  return "✓";
+}
+
+function conciseUiText(value, maxLength = 78) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  // 긴 실행 설명은 첫 문장/첫 절만 먼저 보여주고, 카드가 문단처럼 커지는 것을 막습니다.
+  const first = text.split(/(?<=[.!?。])\s+|\s*→\s*/)[0].trim();
+  const base = first.length >= 12 ? first : text;
+  return base.length > maxLength ? `${base.slice(0, maxLength - 1).trim()}…` : base;
+}
+
+function renderComparisonImages(box, imgData) {
+  box._lastImgData = imgData;
+  const legend = imgData.legend || [];
+  const beforePlanUrl = imgData.before_image_url || "";
+  const afterPlanUrl = imgData.after_image_url || "";
+
+  const summaryCards = legend.map((item) => {
+    const num = escapeHtml(String(item.display_number ?? item.priority ?? "-"));
+    return `<article class="ap-summary-item">
+      <span class="ap-summary-num">${num}</span>
+      <span class="ap-summary-icon">${iconForImprovement(item.improvement)}</span>
+      <div class="ap-summary-copy">
+        <div class="ap-summary-title">${escapeHtml(conciseUiText(item.improvement || "개선안", 72))}</div>
+        <div class="ap-summary-problem">${escapeHtml(conciseUiText(item.floorplan_problem || "", 46))}</div>
+        <span class="ap-target-chip">📍 ${escapeHtml(item.target_label || "방 전체")}</span>
+        ${item.height_note ? `<span class="ai-height-badge">${escapeHtml(item.height_note)}</span>` : ""}
+        ${(item.alternatives || []).length ? `<div class="cmp-alts"><span class="cmp-alts-label">다른 방법</span><div class="cmp-alts-pills">${item.alternatives.map((a) => `<button type="button" class="alt-pill" data-priority="${escapeHtml(String(item.priority ?? ""))}" data-improvement="${escapeHtml(a)}">${escapeHtml(a)}</button>`).join("")}</div></div>` : ""}
+      </div>
+    </article>`;
+  }).join("");
+
+  const pointCards = legend.map((item) => {
+    const num = escapeHtml(String(item.display_number ?? item.priority ?? "-"));
+    return `<div class="ap-point-card"><span>${num}</span><div class="ap-point-icon">${iconForImprovement(item.improvement)}</div><b>${escapeHtml(item.target_label || "개선 위치")}</b><small>${escapeHtml(conciseUiText(item.improvement || "", 56))}</small></div>`;
+  }).join("");
+
+  const commentHtml = imgData.ai_comment
+    ? `<div class="ap-expert-tip"><span class="ap-tip-icon">💡</span><div><b>개선 요약</b><p>${escapeHtml(imgData.ai_comment)}</p></div></div>`
+    : "";
+
+  box.innerHTML = `
+    <section class="ap-result-head">
+      <div><span class="ap-section-kicker">2. 개선 결과</span><h3>${escapeHtml(imgData.room_label || "공간")}의 개선 전·후 모습을 비교해보세요.</h3><p>사용자가 입력한 평면도를 기준으로 <b>BEFORE 공간을 먼저 AI로 재현</b>하고, 같은 공간 구조를 유지한 채 선택한 개선안을 반영한 <b>AFTER 이미지</b>를 생성합니다.</p></div>
+      <div class="ap-result-actions"><button type="button" id="editSelectionsBtn" class="btn btn-secondary">개선안 다시 선택</button><button type="button" class="btn pdf-report-btn" disabled title="AI 개선 전후 이미지 생성이 완료되면 활성화됩니다.">PDF 보고서</button></div>
+    </section>
+
+    <section class="ap-dashboard-grid ap-ai-dashboard-grid">
+      <div class="ap-floorplan-panel ap-ai-visual-panel">
+        <div class="ap-ai-notice"><span>AI</span><div><b>사용자 평면도 기반 개선 전·후 생성</b><small>공간 점검 답변과 직접 작성한 메모를 현재 모습에 반영한 뒤, 같은 공간에 개선안을 적용합니다.</small></div><button type="button" id="regenerateAiImagesBtn" class="link-btn">전·후 다시 생성</button></div>
+        <div class="ap-floorplan-grid ap-ai-image-grid">
+          <article class="ap-plan-card ap-ai-room-card">
+            <div class="ap-plan-title"><div><span class="ap-plan-label before">BEFORE</span><b>현재 공간 이미지</b></div><small>사용자 평면도 + 공간 점검/직접 메모 반영</small></div>
+            <div class="ap-ai-image-wrap">
+              <img id="beforeAiImage" alt="AI 생성 현재 공간" class="ap-ai-room-image" src="${imgData.before_ai_image_url || ''}" ${imgData.before_ai_image_url ? '' : 'hidden'}>
+            </div>
+          </article>
+
+          <div class="ap-compare-arrow" aria-hidden="true">›</div>
+
+          <article class="ap-plan-card ap-plan-card-after ap-ai-room-card">
+            <div class="ap-plan-title"><div><span class="ap-plan-label after">AFTER</span><b>개선 적용 이미지</b></div><small>선택한 개선안을 같은 공간에 적용</small></div>
+            <div class="ap-ai-image-wrap">
+              <img id="afterAiImage" alt="AI 생성 개선 후 공간" class="ap-ai-room-image" hidden>
+              <div id="afterWebOverlay" class="ap-ai-web-overlay" aria-hidden="true"></div>
+            </div>
+          </article>
+        </div>
+        <div id="aiImageError" class="alert alert-warning ap-ai-error" hidden></div>
+        <div id="aiConcreteCommands" class="ap-expert-tip" hidden></div>
+
+        <details class="ap-reference-plans">
+          <summary>입력한 평면도 보기</summary>
+          <div class="ap-reference-grid">
+            <div><b>현재 배치</b>${beforePlanUrl ? `<img src="${beforePlanUrl}" alt="AI 참고용 현재 평면도">` : ""}</div>
+            <div><b>개선 위치</b>${afterPlanUrl ? `<img id="afterPlanImage" src="${afterPlanUrl}" alt="AI 참고용 개선 위치 평면도">` : ""}</div>
+          </div>
+        </details>
+      </div>
+
+      <aside class="ap-summary-panel">
+        <div class="ap-summary-panel-head"><div><span>무엇이 바뀌었나요?</span><b>${legend.length}개</b></div><small>이미지의 번호와 아래 내용을 함께 보세요.</small></div>
+        <div class="ap-summary-list">${summaryCards || '<p class="caption">표시할 개선 포인트가 없습니다.</p>'}</div>
+      </aside>
+    </section>
+
+    <section class="ap-bottom-grid">
+      <div class="ap-bottom-card">
+        <div class="ap-bottom-card-head"><div><span class="ap-section-kicker">개선 포인트</span><h4>어떤 부분을 바꿨는지 확인하세요.</h4></div></div>
+        <div class="ap-point-grid">${pointCards}</div>
+      </div>
+      <div class="ap-bottom-card ap-effect-card">
+        <div class="ap-bottom-card-head"><div><span class="ap-section-kicker">이미지 해석 방법</span><h4>AI 이미지는 이렇게 활용하세요.</h4></div></div>
+        <div class="ap-effect-grid">
+          <div><span>⌂</span><b>Before는 현재 상태</b><small>입력 평면도와 확인된 문제를 AI가 공간 이미지로 재현</small></div>
+          <div><span>✦</span><b>개선 모습 확인</b><small>선택한 안전 개선안의 실제 적용 느낌 확인</small></div>
+          <div><span>i</span><b>참고 이미지</b><small>실제 치수·제품 형태는 현장과 다를 수 있음</small></div>
+        </div>
+      </div>
+    </section>
+    ${commentHtml}
+    <div class="ap-page-footer"><a href="{{ url_for('floorplan_page') }}" class="btn btn-secondary">다른 공간 분석하기</a></div>
+  `;
+
+  box.querySelectorAll(".alt-pill").forEach((pill) => pill.addEventListener("click", () => swapComparisonSolution(box, pill)));
+  box.querySelector("#editSelectionsBtn")?.addEventListener("click", () => loadActionPlan(box));
+  box.querySelector("#regenerateAiImagesBtn")?.addEventListener("click", () => generateAiBeforeAfter(box, true));
+  generateAiBeforeAfter(box, false);
+}
+
+async function generateAiBeforeAfter(box, force = false) {
+  const btn = box.querySelector("#regenerateAiImagesBtn");
+  const beforeImg = box.querySelector("#beforeAiImage");
+  const afterImg = box.querySelector("#afterAiImage");
+  const errorBox = box.querySelector("#aiImageError");
+  const commandBox = box.querySelector("#aiConcreteCommands");
+  const overlayBox = box.querySelector("#afterWebOverlay");
+
+  if (btn) { btn.disabled = true; btn.textContent = force ? "전·후 다시 만드는 중..." : "AI 이미지 준비 중..."; }
+  if (errorBox) errorBox.hidden = true;
+
+  // 코드 렌더링 평면도는 AI reference일 뿐 메인 화면에 placeholder로 표시하지 않습니다.
+  // 실제 AI BEFORE/AFTER가 생성된 뒤에만 해당 이미지를 보여줍니다.
+  if (beforeImg && !beforeImg.getAttribute("src")) beforeImg.hidden = true;
+  if (afterImg) afterImg.hidden = true;
+  if (overlayBox) { overlayBox.hidden = true; overlayBox.innerHTML = ""; }
+
+  const showError = (message) => {
+    if (errorBox) {
+      errorBox.hidden = false;
+      errorBox.innerHTML = `<b>AI 공간 이미지를 아직 표시하지 못했습니다.</b><br>${message}<br><span class="caption">평면도와 개선 설명은 아래 참고 평면도에서 계속 확인할 수 있습니다.</span>
+        <button type="button" id="retryAiImagesBtn" class="btn btn-secondary" style="margin-top:.6rem;">지금 다시 확인</button>`;
+      errorBox.querySelector("#retryAiImagesBtn")?.addEventListener("click", () => generateAiBeforeAfter(box, false));
+    }
+    if (btn) { btn.disabled = false; btn.textContent = "전·후 다시 생성"; }
+  };
+  const enablePdf = () => {
+    box.querySelectorAll(".pdf-report-btn").forEach((pdfBtn) => {
+      pdfBtn.disabled = false;
+      pdfBtn.title = "현재 배치 평면도와 생성된 개선 후 이미지를 포함한 PDF를 다운로드합니다.";
+      pdfBtn.onclick = () => { window.location.href = "/api/download_report"; };
+    });
+  };
+
+  const renderWebOverlay = (markers) => {
+    if (!overlayBox) return;
+    const rows = Array.isArray(markers) ? markers : [];
+    overlayBox.innerHTML = rows.map((m) => {
+      const num = escapeHtml(String(m.display_number ?? ""));
+      const label = escapeHtml(String(m.label || "개선 위치"));
+      const left = Math.max(3, Math.min(95, Number(m.left_pct ?? 8)));
+      const top = Math.max(4, Math.min(93, Number(m.top_pct ?? 8)));
+      return `<span class="ap-ai-overlay-marker" style="left:${left}%;top:${top}%;" title="${label}" aria-label="${label}"><span>${num}</span></span>`;
+    }).join("");
+    overlayBox.hidden = rows.length === 0;
+  };
+
+  const showDone = (afterUrl, beforeUrl = null, overlayMarkers = null) => {
+
+    if (!afterImg || !afterUrl) {
+      showError("생성된 이미지 주소를 받지 못했습니다.");
+      return;
+    }
+
+    if (beforeImg && beforeUrl) {
+      const beforeSeparator = beforeUrl.includes("?") ? "&" : "?";
+      beforeImg.src = `${beforeUrl}${beforeSeparator}t=${Date.now()}`;
+      beforeImg.hidden = false;
+    }
+
+    // 서버가 done이어도 브라우저가 실제 PNG를 성공적으로 읽기 전에는 PDF 버튼을 활성화하지 않습니다.
+    const separator = afterUrl.includes("?") ? "&" : "?";
+    const finalUrl = `${afterUrl}${separator}t=${Date.now()}`;
+    afterImg.hidden = true;
+    afterImg.onload = () => {
+      afterImg.hidden = false;
+      renderWebOverlay(overlayMarkers || box._lastImgData?.overlay_markers || []);
+      enablePdf();
+      if (btn) { btn.disabled = false; btn.textContent = "전·후 다시 생성"; }
+    };
+    afterImg.onerror = () => {
+      afterImg.hidden = true;
+      showError("이미지는 서버에 생성되었지만 브라우저에서 파일을 불러오지 못했습니다. 다시 확인해 주세요.");
+    };
+    afterImg.src = finalUrl;
+
+    if (afterImg.complete && afterImg.naturalWidth > 0) {
+      afterImg.hidden = false;
+      renderWebOverlay(overlayMarkers || box._lastImgData?.overlay_markers || []);
+      enablePdf();
+      if (btn) { btn.disabled = false; btn.textContent = "전·후 다시 생성"; }
+    }
+  };
+
+  // 5초마다 완성 여부만 가볍게 확인합니다. 이 요청 자체는 즉시(항상 1초 이내) 응답이 오므로,
+  // 실제 이미지 생성이 아무리 오래 걸려도(네트워크 지연 등) "화면이 몇 분째 안 바뀐다"는
+  // 원인 불명 상태에 빠지지 않고, 완료되는 순간(최대 5초 오차) 바로 화면에 반영됩니다.
+  const pollUntilDone = async (attempt = 0) => {
+    const maxAttempts = 90; // 5초 x 90 = 최대 7.5분까지 확인
+    if (attempt >= maxAttempts) {
+      showError("7분이 지나도 완성되지 않았습니다. 서버 상태를 확인해 주세요. 아래 버튼으로 다시 확인할 수 있습니다.");
+      return;
+    }
+    let statusRes;
+    try {
+      statusRes = await fetch("/api/check_ai_after_status");
+    } catch (err) {
+      setTimeout(() => pollUntilDone(attempt + 1), 5000);
+      return;
+    }
+    const statusData = await readJsonResponse(statusRes, "AI 이미지 생성 상태 확인에 실패했습니다.");
+    if (!statusRes.ok) {
+      showError(escapeHtml(statusData.error || "상태 확인에 실패했습니다."));
+      return;
+    }
+    if (statusData.before_ai_image_url && beforeImg && beforeImg.dataset.aiSource !== statusData.before_ai_image_url) {
+      beforeImg.dataset.aiSource = statusData.before_ai_image_url;
+      const beforeSeparator = statusData.before_ai_image_url.includes("?") ? "&" : "?";
+      beforeImg.onload = () => { beforeImg.hidden = false; };
+      beforeImg.src = `${statusData.before_ai_image_url}${beforeSeparator}t=${Date.now()}`;
+    }
+    if (statusData.status === "done") {
+      showDone(statusData.after_ai_image_url, statusData.before_ai_image_url, statusData.overlay_markers || box._lastImgData?.overlay_markers || []);
+      return;
+    }
+    if (statusData.status === "error") {
+      showError(escapeHtml(statusData.error || "이미지 생성에 실패했습니다."));
+      return;
+    }
+    // "generating" 또는 "idle"이면 계속 기다립니다.
+    setTimeout(() => pollUntilDone(attempt + 1), 5000);
+  };
+
+  try {
+    // 1단계: 빠른 텍스트 AI가 먼저 구체적인 수정 명령을 확정합니다.
+    const prepController = new AbortController();
+    const prepTimeout = setTimeout(() => prepController.abort(), 12 * 1000);
+    let prepRes;
+    try {
+      prepRes = await fetch("/api/prepare_visual_commands", { method: "POST", signal: prepController.signal });
+    } finally {
+      clearTimeout(prepTimeout);
+    }
+    const prepData = await readJsonResponse(prepRes, "구체적인 개선 명령 요청에 실패했습니다.");
+    if (!prepRes.ok) throw new Error(prepData.error || "구체적인 개선 명령을 만들지 못했습니다.");
+    if (commandBox && (prepData.visual_commands || []).length) {
+      const commandRows = prepData.visual_commands.map((cmd) => `<li><b>${escapeHtml(String(cmd.priority ?? "-"))}. ${escapeHtml(cmd.target || "공간")}</b> · ${escapeHtml(cmd.instruction || "")}</li>`).join("");
+      commandBox.hidden = false;
+      commandBox.innerHTML = `<details class="ap-command-details"><summary>세부 수정 내용 보기</summary><ol>${commandRows}</ol></details>`;
+    }
+
+    // 2단계: 생성을 "시작만" 시키고 바로 응답을 받습니다(이 fetch는 대기 없이 즉시 끝남).
+    const startRes = await fetch("/api/generate_ai_before_after", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ force }),
+    });
+    const startData = await readJsonResponse(startRes, "AI 이미지 생성 시작 요청에 실패했습니다.");
+    if (!startRes.ok) throw new Error(startData.error || "AI 이미지 생성을 시작하지 못했습니다.");
+
+    if (startData.status === "done") {
+      showDone(startData.after_ai_image_url, startData.before_ai_image_url, startData.overlay_markers || box._lastImgData?.overlay_markers || []);
+      return;
+    }
+
+    // status가 "started" 또는 "generating"이면, 완성될 때까지 가볍게 계속 확인합니다.
+    pollUntilDone(0);
+  } catch (err) {
+    showError(escapeHtml(err.message || "AI 이미지를 생성하지 못했습니다."));
+  }
+}
+
+async function readJsonResponse(res, fallbackMessage) {
+  const text = await res.text();
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch (_) {
+    // Flask debug/500 HTML을 JSON으로 파싱하다가 "Unexpected token <"가 뜨는 것을 막습니다.
+    throw new Error(`${fallbackMessage} (서버 응답 ${res.status})`);
+  }
+}
+
+async function swapComparisonSolution(box, pill) {
+  const priority = Number(pill.dataset.priority);
+  const improvement = pill.dataset.improvement;
+  box.querySelectorAll(".alt-pill").forEach((b) => { b.disabled = true; });
+  document.getElementById("afterImageLoading")?.classList.add("show");
+  try {
+    const res = await fetch("/api/swap_comparison_solution", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ priority, improvement }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "변경에 실패했습니다.");
+    const merged = Object.assign({}, box._lastImgData, {
+      legend: data.legend || box._lastImgData.legend,
+      after_image_url: data.after_image_url || box._lastImgData.after_image_url,
+    });
+    renderComparisonImages(box, merged);
+  } catch (err) {
+    document.getElementById("afterImageLoading")?.classList.remove("show");
+    box.querySelectorAll(".alt-pill").forEach((b) => { b.disabled = false; });
+    alert(err.message);
+  }
+}
+
+loadActionPlan(document.getElementById("actionPlanBox"));
+</script>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}안넘어집 | {{ room_label }} 공간 분석{% endblock %}
+{% block content %}
+<div class="analysis-page-head">
+  <div>
+    <div class="eyebrow">{{ room_label }} 공간 분석</div>
+    <h2 class="medi-title">배치한 공간을 분석했어요</h2>
+    <p class="medi-subtitle">방 크기와 가구 위치, 건강·생활 정보와 공간 상태를 함께 살펴봤습니다.</p>
+  </div>
+  <a class="analysis-back-link" href="{{ url_for('layout_editor_page') }}">← 배치 수정하기</a>
+</div>
+
+<div id="analysisPageLoading" class="analysis-page-loading {{ 'open' if should_run else '' }}" aria-hidden="{{ 'false' if should_run else 'true' }}">
+  <div class="analysis-loading-card">
+    <div class="analysis-loader-orbit" aria-hidden="true"><span></span><span></span></div>
+    <div class="analysis-loading-kicker">AI가 공간을 살펴보는 중</div>
+    <h3>잠시만 기다려 주세요</h3>
+    <p>배치 확인 → 위험 지점 분석 → 개선 방향 정리 순서로 진행하고 있어요.</p>
+    <div class="analysis-progress-track"><span></span></div>
+    <div class="analysis-progress-steps"><b>배치 확인</b><span>위험 지점 분석</span><span>개선 방향 정리</span></div>
+  </div>
+</div>
+
+<div id="analysisPageError" style="display:none;"></div>
+<div id="analysisPageResult"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const initialAnalysisData = {{ initial_data|tojson if initial_data else 'null' }};
+const shouldRunAnalysis = {{ 'true' if should_run else 'false' }};
+const resultRoot = document.getElementById("analysisPageResult");
+const loadingOverlay = document.getElementById("analysisPageLoading");
+const errorRoot = document.getElementById("analysisPageError");
+
+function escapeHtml(text) {
+  return String(text ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+function setLoading(on) {
+  loadingOverlay.classList.toggle("open", !!on);
+  loadingOverlay.setAttribute("aria-hidden", on ? "false" : "true");
+  document.body.classList.toggle("analysis-busy", !!on);
+}
+
+function autoSizeFloorplanFrame(frame) {
+  if (!frame) return;
+  const resize = () => {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc) return;
+      doc.documentElement.style.overflow = "hidden";
+      doc.body.style.overflow = "hidden";
+      const height = Math.max(
+        doc.documentElement.scrollHeight || 0,
+        doc.body?.scrollHeight || 0,
+        430
+      );
+      frame.style.height = `${height + 8}px`;
+    } catch (_) {}
+  };
+  frame.addEventListener("load", resize, { once: false });
+  setTimeout(resize, 80);
+}
+
+function shortText(text, max = 118) {
+  const value = String(text || "").trim();
+  if (value.length <= max) return value;
+  return value.slice(0, max).trim() + "…";
+}
+
+function renderAnalysis(data) {
+  errorRoot.style.display = "none";
+  const recs = Array.isArray(data.recommendations) ? data.recommendations : [];
+  const metrics = data.metrics || {};
+
+  let html = `
+    <div class="analysis-summary-strip">
+      <div class="analysis-summary-cell"><span>실제 방 크기</span><b>${escapeHtml(metrics.room_size || "-")}</b></div>
+      <div class="analysis-summary-cell"><span>방 면적</span><b>${escapeHtml(metrics.room_area || "-")}</b></div>
+      <div class="analysis-summary-cell"><span>배치 가구</span><b>${escapeHtml(metrics.furniture_count || "-")}</b></div>
+      <div class="analysis-summary-cell"><span>가구 점유율</span><b>${escapeHtml(metrics.occupancy || "-")}</b></div>
+    </div>
+
+    <div class="analysis-overview-grid">
+      <section class="analysis-panel-clean">
+        <h3>내 방의 위험 지점</h3>
+        <p class="caption">번호가 있는 위치와 오른쪽 설명을 함께 확인해 주세요.</p>`;
+
+  if (data.floorplan_html) {
+    html += `<iframe id="analysisFloorplanFrame" class="analysis-floorplan-frame" scrolling="no" srcdoc="${escapeHtml(data.floorplan_html)}"></iframe>`;
+  } else {
+    html += `<div class="alert alert-info" style="margin-top:12px;">특정 위치로 표시할 위험은 없습니다. 오른쪽에서 공간 전체에 대한 개선 내용을 확인해 주세요.</div>`;
+  }
+
+  html += `</section><section class="analysis-panel-clean">
+      <h3>개선 우선순위</h3>
+      <p class="caption">1순위부터 먼저 살펴보세요. 숫자가 작을수록 우선적으로 개선하면 좋은 항목입니다.</p>
+      <div class="analysis-risk-list">`;
+
+  if (!recs.length) {
+    html += `<div class="alert alert-info">현재 확인된 개선 방법이 없습니다.</div>`;
+  } else {
+    recs.forEach((rec, idx) => {
+      const number = rec.display_number || rec.priority || (idx + 1);
+      const title = shortText(rec.improvement || "확인된 공간 문제를 개선해 주세요.", 105);
+      const problem = shortText(rec.floorplan_problem || rec.reason || "", 88);
+      html += `<article class="analysis-risk-item analysis-risk-rank-${escapeHtml(number)}">
+        <div class="analysis-risk-rank"><span>${escapeHtml(number)}</span><b>${escapeHtml(number)}순위</b></div>
+        <div>
+          <div class="analysis-risk-label">${escapeHtml(number)}순위 개선안</div>
+          <h4>${escapeHtml(title)}</h4>
+          ${problem ? `<p>${escapeHtml(problem)}</p>` : ""}
+        </div>
+      </article>`;
+    });
+  }
+  html += `</div>`;
+
+  if (data.summary || data.risk_analysis) {
+    html += `<div class="analysis-note-box"><b>분석 한줄 요약</b><br>${escapeHtml(shortText(data.final_summary || data.risk_analysis || data.summary, 180))}</div>`;
+  }
+  html += `</section></div>`;
+
+  const questions = Array.isArray(data.clarification_questions) ? data.clarification_questions : [];
+  if (questions.length) {
+    html += `<section class="analysis-clarification-section">
+      <h3 style="margin:0 0 4px;">조금 더 확인하면 좋아요</h3>
+      <p class="caption">기존 개선 내용은 그대로 유지되고, 아래 답변은 필요한 내용을 추가하는 데만 사용됩니다.</p>
+      <form id="clarificationForm">`;
+    questions.forEach((q, idx) => {
+      const qid = q.question_id || `Q${idx + 1}`;
+      html += `<div class="analysis-question-card">
+        <b>${idx + 1}. ${escapeHtml(q.question || "")}</b>
+        <div class="analysis-question-options">
+          <label><input type="radio" name="clarify_${escapeHtml(qid)}" value="UNKNOWN" checked> 잘 모르겠어요</label>
+          <label><input type="radio" name="clarify_${escapeHtml(qid)}" value="YES"> 예</label>
+          <label><input type="radio" name="clarify_${escapeHtml(qid)}" value="NO"> 아니오</label>
+        </div>
+        ${q.reason ? `<p class="caption" style="margin:8px 0 0;">확인하는 이유: ${escapeHtml(shortText(q.reason, 140))}</p>` : ""}
+      </div>`;
+    });
+    html += `<button class="btn" type="submit" style="margin-top:12px;">답변 반영하기</button></form></section>`;
+  }
+
+  html += `<section class="analysis-next-section">
+    <div>
+      <h3 style="margin:0 0 4px;">다음 단계</h3>
+      <p class="caption" style="margin:0;">확인된 위험 지점별로 실제로 적용할 방법을 골라보세요.</p>
+    </div>
+    ${(!data.awaiting_confirmation && recs.length) ? '<a class="btn" href="{{ url_for("action_plan_page") }}">개선 방법 선택하기 →</a>' : '<span class="caption">추가 질문을 먼저 확인해 주세요.</span>'}
+  </section>`;
+
+  resultRoot.innerHTML = html;
+  autoSizeFloorplanFrame(document.getElementById("analysisFloorplanFrame"));
+
+  const clarificationForm = document.getElementById("clarificationForm");
+  if (clarificationForm) {
+    clarificationForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const answers = {};
+      questions.forEach((q, idx) => {
+        const qid = q.question_id || `Q${idx + 1}`;
+        const checked = clarificationForm.querySelector(`input[name="clarify_${CSS.escape(qid)}"]:checked`);
+        answers[qid] = checked ? checked.value : "UNKNOWN";
+      });
+      const button = clarificationForm.querySelector('button[type="submit"]');
+      button.disabled = true;
+      button.textContent = "답변을 반영하고 있어요...";
+      try {
+        const res = await fetch("/api/clarification_answer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ answers }),
+        });
+        const contentType = res.headers.get("content-type") || "";
+        const next = contentType.includes("application/json") ? await res.json() : { error: await res.text() };
+        if (!res.ok) throw new Error(next.error || "답변을 반영하지 못했습니다.");
+        renderAnalysis(next);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch (err) {
+        alert(err.message || "답변을 반영하지 못했습니다.");
+        button.disabled = false;
+        button.textContent = "답변 반영하기";
+      }
+    });
+  }
+}
+
+async function runAnalysis() {
+  setLoading(true);
+  try {
+    const res = await fetch("/api/run_layout_analysis", { method: "POST" });
+    const contentType = res.headers.get("content-type") || "";
+    const data = contentType.includes("application/json") ? await res.json() : { error: await res.text() };
+    if (!res.ok) throw new Error(data.error || "공간 분석을 완료하지 못했습니다.");
+    renderAnalysis(data);
+  } catch (err) {
+    errorRoot.style.display = "block";
+    errorRoot.innerHTML = `<div class="analysis-error-card"><h3>공간 분석을 완료하지 못했어요</h3><p>${escapeHtml(err.message || "잠시 후 다시 시도해 주세요.")}</p><a class="btn" href="{{ url_for('layout_editor_page') }}">배치 화면으로 돌아가기</a></div>`;
+  } finally {
+    setLoading(false);
+  }
+}
+
+if (shouldRunAnalysis) {
+  runAnalysis();
+} else if (initialAnalysisData) {
+  renderAnalysis(initialAnalysisData);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{% block title %}안넘어집 | 집안 안전 가이드{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<div class="app-shell">
+  {% block masthead %}
+  <div class="medi-masthead">
+    <div><a href="{{ url_for('home') }}" class="brand">🏡 안넘어집</a></div>
+    <div class="tagline">나의 낙상 위험을 읽고, 집 안의 위험을 바꾸는 맞춤 안전 가이드</div>
+  </div>
+  {% endblock %}
+
+  {% block sidebar %}
+  <aside class="sidebar">
+    <div class="sidebar-eyebrow">PROCESS</div>
+    <hr />
+    <h3>진행 단계</h3>
+    {% for step in progress.steps %}
+    <div class="step-item step-{{ step.status }}">
+      <span class="step-number">{{ step.num }}</span>
+      <span class="step-label">{{ step.label }}</span>
+    </div>
+    {% endfor %}
+    <hr />
+    <p class="sidebar-caption">안넘어집 · 맞춤 집안 안전 가이드</p>
+  </aside>
+  {% endblock %}
+
+  <main class="main-content{% block main_class %}{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% block modals %}{% endblock %}
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}안넘어집 | 공간 개선 우선순위{% endblock %}
+{% block content %}
+<div class="priority-intro">
+  <span class="priority-kicker">건강 상태와 집 안 위험 함께 보기</span>
+  <h2 class="medi-title">우리 집 개선 우선순위</h2>
+  <p class="medi-subtitle">건강·생활 정보와 집 안에서 확인한 위험을 함께 살펴, 먼저 개선하면 좋은 공간을 안내합니다.</p>
+</div>
+
+<div class="priority-room-list">
+  {% for room in ranked_rooms %}
+    <article class="medi-card priority-room-card {% if room.rank == 1 %}priority-room-card-top{% endif %}">
+      <div class="priority-rank-col">
+        {% if room.rank %}
+          <span class="priority-rank-badge">{{ room.rank }}순위</span>
+        {% else %}
+          <span class="priority-rank-badge priority-rank-none">확인 필요</span>
+        {% endif %}
+        <div class="priority-room-icon">{{ room.icon }}</div>
+      </div>
+
+      <div class="priority-room-main">
+        <div class="priority-room-title-row">
+          <h3>{{ room.label }}</h3>
+          {% if room.rank == 1 %}<span class="top-recommend-badge">가장 먼저 개선 권장</span>{% endif %}
+        </div>
+
+        {% if room.hazards %}
+          <p class="priority-summary">주의해서 볼 항목 {{ room.hazard_count }}개가 확인되었습니다.</p>
+          <div class="priority-hazard-chips">
+            {% for hazard in room.hazards[:3] %}
+              <span class="hazard-chip">{{ hazard.hazard_label }}</span>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="priority-summary muted">현재 확인한 내용에서는 이 공간에 우선적으로 표시할 위험이 없습니다.</p>
+        {% endif %}
+      </div>
+
+      <div class="priority-room-action">
+        <button type="button" class="btn select-room-btn" data-room="{{ room.key }}">
+          {% if room.rank == 1 %}이 공간부터 개선하기{% else %}{{ room.label }} 개선하기{% endif %}
+        </button>
+      </div>
+    </article>
+  {% endfor %}
+</div>
+
+<div class="priority-method-note">
+  <b>이 순서는 어떻게 정했나요?</b>
+  <span>건강·생활 설문 결과와 집 안에서 확인한 위험을 함께 살펴, 먼저 점검하면 좋은 공간 순서로 정했습니다.</span>
+</div>
+
+<div class="space-check-actions">
+  <a href="{{ url_for('space_check_page') }}" class="btn btn-secondary">← 위험요소 다시 확인하기</a>
+</div>
+
+<script>
+document.querySelectorAll(".select-room-btn").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    const room = btn.dataset.room;
+    const res = await fetch("/api/select_room", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ room }),
+    });
+    if (res.ok) {
+      window.location.href = "/layout_editor";
+    } else {
+      btn.disabled = false;
+      alert("공간을 선택하지 못했습니다.");
+    }
+  });
+});
+</script>
+{% endblock %}

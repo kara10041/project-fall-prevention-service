@@ -1,0 +1,32 @@
+target_object_type,target_object_keyword,notes
+STAIR,계단,계단 객체
+STAIR,난간,계단 지지물
+TOILET,변기,변기 객체
+TOILET,화장실,화장실 설비
+TOILET,손잡이,변기 주변 지지물
+CHAIR,의자,의자 객체
+CHAIR,좌석,좌면 관련
+BED,침대,침대 객체
+CABINET,수납,수납장·수납 위치
+CABINET,선반,선반 객체
+CABINET,작업대,주방 작업대
+OBJECT,바닥,바닥 적치물
+OBJECT,물건,바닥 물건
+LIGHT,조명,조명 설비
+LIGHT,센서등,야간등
+LIGHT,전구,조명 설비
+PATH,바닥,보행 동선
+PATH,복도,보행 동선
+PATH,동선,이동 경로
+PATH,가구,동선 장애물
+PATH,문턱,이동 장벽
+RUG,러그,러그 객체
+RUG,매트,매트 객체
+RUG,카펫,카펫 객체
+THRESHOLD,문턱,문턱 객체
+THRESHOLD,단차,높이 차이
+FURNITURE,가구,가구 객체
+FURNITURE,모서리,가구 모서리
+ALERT_DEVICE,알람,경보 장치
+ALERT_DEVICE,비상,비상 알림
+ALERT_DEVICE,보조기술,알림 보조기술

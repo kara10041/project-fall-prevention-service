@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}안넘어집 | 예측 결과{% endblock %}
+{% block content %}
+<div class="eyebrow">STEP 3 · 위험 분석</div>
+<h2 class="medi-title">나의 낙상 위험 분석 결과</h2>
+<p class="medi-subtitle">입력하신 건강·생활 정보를 바탕으로 산출된 예측 결과입니다.</p>
+
+<div class="medi-card gauge-card">
+  <div class="gauge-card-title">예측 낙상 위험도</div>
+  <div class="gauge-card-body">
+    <div class="gauge-wrap">
+      <svg id="gaugeSvg" viewBox="0 0 240 150" width="100%" style="max-width:320px;"></svg>
+    </div>
+    <div class="gauge-side">
+      <p class="gauge-side-headline">현재 예측 위험도는 <span style="color:{{ risk_color }};">위험 기준 {{ '이상' if prediction.get('predicted_class') else '미만' }}</span>입니다.</p>
+      <p class="gauge-side-desc">{{ risk_message }}</p>
+      <div class="gauge-compare">
+        <div class="gauge-compare-item">
+          <div class="gauge-compare-label">현재 예측 위험도</div>
+          <div class="gauge-compare-value" style="color:{{ risk_color }};">{{ '%.2f'|format(risk_score) }}%</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <div class="gauge-note">ⓘ 보기 쉽도록 위험도가 표시되는 구간을 확대했습니다. 위험 기준: {{ '%.2f'|format(threshold_percent) }}%</div>
+
+</div>
+
+{% if prediction.get('shap_result') %}
+<div class="tabs" style="margin-top:1.4rem;">
+  <button type="button" class="tab-btn active" data-tab="shap">주요 위험 요인 분석</button>
+  <button type="button" class="tab-btn" data-tab="interaction">함께 영향을 주는 요인</button>
+</div>
+
+<div class="tab-panel active" id="tab-shap">
+  <div class="factor-panel-head">
+    <span class="factor-panel-title">l 어떤 요인이 영향을 주었나요?</span>
+  </div>
+  <p class="caption">이번 결과에 영향을 많이 준 항목부터 보여드립니다.</p>
+
+  <div class="factor-layout">
+    <div class="radar-wrap">
+      <svg id="radarSvg" viewBox="0 0 300 300"></svg>
+    </div>
+    <div class="factor-card-col">
+      <div class="factor-card-list" id="mainFactorList">
+        {% for f in main_factors %}
+        <div class="factor-card {{ '' if loop.index <= 3 else 'factor-card-extra' }}" {% if loop.index > 3 %}style="display:none;"{% endif %}>
+          <span class="factor-num">{{ loop.index }}</span>
+          <div class="factor-card-label">{{ f.label }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if main_factors|length > 3 %}
+      <button type="button" class="link-btn" id="toggleMainFactors">전체보기 ({{ main_factors|length }}개)</button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="tab-panel" id="tab-interaction">
+  <div class="factor-panel-head">
+    <span class="factor-panel-title">l 함께 살펴볼 요인</span>
+  </div>
+  <p class="caption">두 가지 상태가 함께 있을 때 낙상 위험에 어떤 영향을 줄 수 있는지 보여드립니다.</p>
+
+  <div class="interaction-card-grid" id="interactionCardGrid">
+    {% for c in interaction_cards %}
+    <div class="interaction-card {{ '' if loop.index <= 6 else 'interaction-card-extra' }}" {% if loop.index > 6 %}style="display:none;"{% endif %}>
+      <span class="factor-num">{{ loop.index }}</span>
+      <div class="interaction-card-pair">
+        <span>{{ c.label_1 }}</span><span class="interaction-x">×</span><span>{{ c.label_2 }}</span>
+      </div>
+      <div class="interaction-card-footer">
+        <span class="interaction-card-caption">{{ '위험을 높일 수 있는 조합' if c.interaction_value >= 0 else '위험을 낮추는 데 도움이 되는 조합' }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% if interaction_cards|length > 6 %}
+  <button type="button" class="link-btn" id="toggleInteractionCards">전체보기 ({{ interaction_cards|length }}개)</button>
+  {% endif %}
+</div>
+{% endif %}
+
+<details class="expander">
+  <summary>📋 입력하신 정보 요약 보기</summary>
+  <div class="expander-body">
+    <div class="metric-grid">
+      <div class="metric-box"><div class="metric-label">나이</div><div class="metric-value">{{ model_input.get('age', '-') }}세</div></div>
+      <div class="metric-box"><div class="metric-label">성별</div><div class="metric-value">{{ '여성' if model_input.get('sex')==2 else '남성' }}</div></div>
+      <div class="metric-box"><div class="metric-label">운동 여부</div><div class="metric-value">{{ '규칙적으로 함' if model_input.get('regular_exercise')==1 else '안 함' }}</div></div>
+      <div class="metric-box"><div class="metric-label">우울 점수</div><div class="metric-value">{{ model_input.get('depression_score_paper', '-') }}</div></div>
+    </div>
+  </div>
+</details>
+
+<div class="btn-row">
+  <a href="{{ url_for('input_page') }}" class="btn btn-secondary">← 다시 입력하기</a>
+  <a href="{{ url_for('space_check_page') }}" class="btn">우리 집 안전 점검하기 →</a>
+</div>
+
+<script>
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+document.getElementById("toggleMainFactors")?.addEventListener("click", function () {
+  const hidden = document.querySelectorAll("#mainFactorList .factor-card-extra");
+  const isHidden = hidden.length && hidden[0].style.display === "none";
+  hidden.forEach((el) => { el.style.display = isHidden ? "flex" : "none"; });
+  this.textContent = isHidden ? "접기" : `전체보기 (${document.querySelectorAll("#mainFactorList .factor-card").length}개)`;
+});
+
+document.getElementById("toggleInteractionCards")?.addEventListener("click", function () {
+  const hidden = document.querySelectorAll("#interactionCardGrid .interaction-card-extra");
+  const isHidden = hidden.length && hidden[0].style.display === "none";
+  hidden.forEach((el) => { el.style.display = isHidden ? "flex" : "none"; });
+  this.textContent = isHidden ? "접기" : `전체보기 (${document.querySelectorAll("#interactionCardGrid .interaction-card").length}개)`;
+});
+
+(function drawGauge() {
+  const value = {{ risk_score }};
+  const max = {{ gauge_max }};
+  const threshold = {{ threshold_percent }};
+  const color = "{{ risk_color }}";
+  const svg = document.getElementById("gaugeSvg");
+  const cx = 120, cy = 130, r = 100;
+
+  function polar(angleDeg, radius) {
+    const a = (Math.PI / 180) * angleDeg;
+    return [cx + radius * Math.cos(a), cy - radius * Math.sin(a)];
+  }
+  function arcPath(startVal, endVal, radius) {
+    const startAngle = 180 - (startVal / max) * 180;
+    const endAngle = 180 - (endVal / max) * 180;
+    const [x1, y1] = polar(startAngle, radius);
+    const [x2, y2] = polar(endAngle, radius);
+    const largeArc = (startAngle - endAngle) > 180 ? 1 : 0;
+    return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`;
+  }
+
+  let html = "";
+  html += `<path d="${arcPath(0, threshold, r)}" stroke="#DCFCE7" stroke-width="20" fill="none" stroke-linecap="round"/>`;
+  html += `<path d="${arcPath(threshold, max, r)}" stroke="#FEE2E2" stroke-width="20" fill="none" stroke-linecap="round"/>`;
+  html += `<path d="${arcPath(0, Math.min(value, max), r)}" stroke="${color}" stroke-width="10" fill="none" stroke-linecap="round"/>`;
+
+  const [tx, ty] = polar(180 - (threshold / max) * 180, r);
+  html += `<line x1="${tx}" y1="${ty - 12}" x2="${tx}" y2="${ty + 12}" stroke="#1E2B26" stroke-width="3"/>`;
+
+  html += `<text x="${cx}" y="${cy - 20}" text-anchor="middle" font-size="30" font-weight="700" fill="${color}">${value}%</text>`;
+  html += `<text x="12" y="${cy + 14}" font-size="11" fill="#4B5C54">0%</text>`;
+  html += `<text x="${cx - 26}" y="${ty - 18}" font-size="11" fill="#4B5C54">기준 ${threshold.toFixed(1)}%</text>`;
+  html += `<text x="${cx + 78}" y="${cy + 14}" font-size="11" fill="#4B5C54" text-anchor="end">${max.toFixed(1)}%</text>`;
+
+  svg.innerHTML = html;
+})();
+
+(function drawRadar() {
+  const svg = document.getElementById("radarSvg");
+  if (!svg) return;
+  const allFactors = {{ main_factors|tojson }};
+  const factors = allFactors.slice(0, 10);
+  const n = factors.length;
+  if (n < 3) { svg.closest(".radar-wrap").style.display = "none"; return; }
+
+  const cx = 150, cy = 150, maxR = 95;
+  const maxVal = Math.max(...factors.map((f) => Math.abs(f.shap_value)), 0.0001);
+
+  function point(i, r) {
+    const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
+    return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+  }
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  let html = "";
+  [0.25, 0.5, 0.75, 1].forEach((frac) => {
+    const pts = factors.map((_, i) => point(i, maxR * frac).join(",")).join(" ");
+    html += `<polygon points="${pts}" fill="none" stroke="#E4E9E3" stroke-width="1"/>`;
+  });
+  factors.forEach((f, i) => {
+    const [x, y] = point(i, maxR);
+    html += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#E4E9E3" stroke-width="1"/>`;
+    const [lx, ly] = point(i, maxR + 22);
+    html += `<text x="${lx}" y="${ly}" font-size="9.5" fill="#4B5C54" text-anchor="middle" dominant-baseline="middle">${escapeHtml(f.label)}</text>`;
+  });
+  const dataPts = factors.map((f, i) => point(i, maxR * Math.abs(f.shap_value) / maxVal).join(",")).join(" ");
+  html += `<polygon points="${dataPts}" fill="rgba(47,111,98,0.22)" stroke="#2F6F62" stroke-width="2"/>`;
+  factors.forEach((f, i) => {
+    const [x, y] = point(i, maxR * Math.abs(f.shap_value) / maxVal);
+    html += `<circle cx="${x}" cy="${y}" r="2.6" fill="#2F6F62"/>`;
+  });
+
+  svg.innerHTML = html;
+})();
+</script>
+{% endblock %}

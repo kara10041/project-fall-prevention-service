@@ -2,7 +2,7 @@ Team project archive
 
 #### 안넘어집 (Flask)
 
-Streamlit 화면을 **Flask + 순수 HTML/CSS/JS**로 마이그레이션한 버전. 백엔드 로직(`src/`, `integration/`)은 그대로 유지
+Streamlit 화면을 Flask + 순수 HTML/CSS/JS로 마이그레이션한 버전. 백엔드 로직(`src/`, `integration/`)은 그대로 유지
 
 #### 실행
 

@@ -1,8 +1,7 @@
 Team project archive
 
 #### 안넘어집 (Flask)
-
-Streamlit 화면을 Flask + 순수 HTML/CSS/JS로 마이그레이션한 버전. 백엔드 로직(`src/`, `integration/`)은 그대로 유지
+노인/취약계층 낙상 위험 예측 및 공간 개선 플래너 서비스
 
 #### 실행
 
@@ -24,5 +23,6 @@ python app.py
 
 #### 주요 변경점
 
-* UI 변경 
+* UI 변경
+* Streamlit 화면을 Flask + 순수 HTML/CSS/JS로 마이그레이션한 버전. 백엔드 로직(`src/`, `integration/`)은 그대로 유지
 * 서비스 수정: `/floorplan`에서는 우선순위 순서로 공간을 보여주며 사용자가 원하는 공간을 선택하면 기존 `/layout_editor` 흐름을 그대로 사용함
